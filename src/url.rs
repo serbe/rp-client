@@ -1,19 +1,15 @@
-use std::convert::TryFrom;
+// use std::convert::TryFrom;
 use std::str::FromStr;
 
 use http::Uri;
 
 use crate::error::{Error, Result};
 
-pub trait IntoUrl: PolyfillTryInto {}
-
-impl<T: PolyfillTryInto> IntoUrl for T {}
-
-pub trait PolyfillTryInto {
+pub trait IntoUrl {
     fn into_url(self) -> Result<Url>;
 }
 
-impl PolyfillTryInto for Url {
+impl IntoUrl for Url {
     fn into_url(self) -> Result<Url> {
         if self.uri.host().is_some() {
             Ok(self)
@@ -23,15 +19,21 @@ impl PolyfillTryInto for Url {
     }
 }
 
-impl<'a> PolyfillTryInto for &'a str {
+impl<'a> IntoUrl for &'a str {
     fn into_url(self) -> Result<Url> {
         self.parse::<Url>()?.into_url()
     }
 }
 
-impl<'a> PolyfillTryInto for &'a String {
+impl<'a> IntoUrl for &'a String {
     fn into_url(self) -> Result<Url> {
         self.parse::<Url>()?.into_url()
+    }
+}
+
+impl<'a> IntoUrl for Uri {
+    fn into_url(self) -> Result<Url> {
+        Url::new(self).into_url()
     }
 }
 
@@ -72,14 +74,14 @@ impl Url {
             (Some(host), Some(port)) => Ok(format!("{}:{}", host, port)),
             (None, _) => Err(Error::NoHost(self.uri)),
             (_, None) => Err(Error::NoPort(self.uri)),
-            (None, None) => Err(Error::NoHostPort(self.uri.clone())),
+            (None, None) => Err(Error::NoHostPort(self.uri)),
         }
     }
 
-    fn scheme(&self) -> Result<String> {
+    pub fn scheme(&self) -> Result<String> {
         match self.uri.scheme_str() {
             Some(scheme) => Ok(scheme.to_lowercase()),
-            None => Err(Error::NoScheme(self.uri.clone())),
+            None => Err(Error::NoScheme(self.uri)),
         }
     }
 
@@ -88,21 +90,21 @@ impl Url {
     }
 }
 
-impl<'a> TryFrom<&'a str> for Url {
-    type Error = Error;
+// impl<'a> TryFrom<&'a str> for Url {
+//     type Error = Error;
 
-    fn try_from(uri: &'a str) -> Result<Url> {
-        Url::into_uri(uri.parse::<Uri>()?)
-    }
-}
+//     fn try_from(uri: &'a str) -> Result<Url> {
+//         Url::into_uri(uri.parse::<Uri>()?)
+//     }
+// }
 
-impl TryFrom<String> for Url {
-    type Error = Error;
+// impl TryFrom<String> for Url {
+//     type Error = Error;
 
-    fn try_from(uri: String) -> Result<Url> {
-        Url::into_uri(uri.parse::<Uri>()?)
-    }
-}
+//     fn try_from(uri: String) -> Result<Url> {
+//         Url::into_uri(uri.parse::<Uri>()?)
+//     }
+// }
 
 impl FromStr for Url {
     type Err = Error;

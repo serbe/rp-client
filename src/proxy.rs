@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use http::{HeaderValue, Uri};
 
 use crate::error::{Error, Result};
-use crate::url::{IntoUrl, Url};
+use crate::url::{Url, IntoUrl};
 
 pub trait IntoProxyScheme {
     fn into_proxy_scheme(self) -> Result<ProxyScheme>;
@@ -173,7 +173,7 @@ impl ProxyScheme {
     //     }
     // }
 
-    fn parse(url: Uri) -> Result<Self> {
+    fn parse(url: Url) -> Result<Self> {
         let to_addr = || {
             let host_and_port = url.with_default_port(|url| match url.scheme() {
                 "socks5" | "socks5h" => Ok(1080),
@@ -183,13 +183,11 @@ impl ProxyScheme {
             addr.next().ok_or_else(::error::unknown_proxy_scheme)
         };
 
-        let mut scheme = match url.scheme() {
+        let mut scheme = match url.scheme()?.as_str() {
             "http" | "https" => Self::http(url.clone())?,
-            #[cfg(feature = "socks")]
             "socks5" => Self::socks5(to_addr()?)?,
-            #[cfg(feature = "socks")]
             "socks5h" => Self::socks5h(to_addr()?)?,
-            _ => return Err(::error::unknown_proxy_scheme()),
+            scheme => return Err(Error::UnknownProxyScheme(scheme)),
         };
 
         if let Some(pwd) = url.password() {

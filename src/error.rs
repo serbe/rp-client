@@ -13,11 +13,13 @@ pub enum Error {
     #[fail(display = "Uri {} no have host", _0)]
     NoHost(http::Uri),
     #[fail(display = "Uri {:?} no have scheme", _0)]
-    NoScheme(Url),
+    NoScheme(http::Uri),
     #[fail(display = "Uri {} no have port", _0)]
     NoPort(http::Uri),
-    #[fail(display = "Uri {:?} no have host and port", _0)]
-    NoHostPort(Url),
+    #[fail(display = "Uri {} no have host and port", _0)]
+    NoHostPort(http::Uri),
+    #[fail(display = "Uncnown proxy cheme {}", _0)]
+    UnknownProxyScheme(&'static str),
 }
 
 impl From<std::io::Error> for Error {
