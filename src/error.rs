@@ -19,7 +19,7 @@ pub enum Error {
     #[fail(display = "Uri {} no have host and port", _0)]
     NoHostPort(http::Uri),
     #[fail(display = "Uncnown proxy cheme {}", _0)]
-    UnknownProxyScheme(&'static str),
+    UnknownProxyScheme(http::Uri),
 }
 
 impl From<std::io::Error> for Error {

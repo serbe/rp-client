@@ -1,4 +1,4 @@
-// use std::convert::TryFrom;
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::str::FromStr;
 
 use http::Uri;
@@ -72,21 +72,33 @@ impl Url {
     fn host_port(&self) -> Result<String> {
         match (self.uri.host(), self.default_port()) {
             (Some(host), Some(port)) => Ok(format!("{}:{}", host, port)),
-            (None, _) => Err(Error::NoHost(self.uri)),
-            (_, None) => Err(Error::NoPort(self.uri)),
-            (None, None) => Err(Error::NoHostPort(self.uri)),
+            (None, Some(_)) => Err(Error::NoHost(self.uri.clone())),
+            (Some(_), None) => Err(Error::NoPort(self.uri.clone())),
+            (None, None) => Err(Error::NoHostPort(self.uri.clone())),
         }
     }
 
     pub fn scheme(&self) -> Result<String> {
         match self.uri.scheme_str() {
             Some(scheme) => Ok(scheme.to_lowercase()),
-            None => Err(Error::NoScheme(self.uri)),
+            None => Err(Error::NoScheme(self.uri.clone())),
         }
     }
 
     fn origin(&self) -> Result<String> {
         Ok(format!("{}://{}", self.scheme()?, self.host_port()?))
+    }
+
+    fn socket_addrs(&self) -> Result<Vec<SocketAddr>> {
+        Ok(self.host_port()?.to_socket_addrs()?.collect())
+    }
+
+    pub fn socket_addr(&self) -> Result<SocketAddr> {
+        Ok(self.socket_addrs()?[0])
+    }
+
+    pub fn uri(&self) -> Uri {
+        self.uri.clone()
     }
 }
 

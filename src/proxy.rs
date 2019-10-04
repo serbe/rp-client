@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use http::{HeaderValue, Uri};
 
 use crate::error::{Error, Result};
-use crate::url::{Url, IntoUrl};
+use crate::url::{IntoUrl, Url};
 
 pub trait IntoProxyScheme {
     fn into_proxy_scheme(self) -> Result<ProxyScheme>;
@@ -174,27 +174,18 @@ impl ProxyScheme {
     // }
 
     fn parse(url: Url) -> Result<Self> {
-        let to_addr = || {
-            let host_and_port = url.with_default_port(|url| match url.scheme() {
-                "socks5" | "socks5h" => Ok(1080),
-                _ => Err(()),
-            })?;
-            let mut addr = try_!(host_and_port.to_socket_addrs());
-            addr.next().ok_or_else(::error::unknown_proxy_scheme)
+        let scheme = match url.scheme()?.as_bytes() {
+            b"http" | b"https" => Self::http(url.clone())?,
+            b"socks5" => Self::socks5(url.socket_addr()?)?,
+            b"socks5h" => Self::socks5h(url.socket_addr()?)?,
+            _ => return Err(Error::UnknownProxyScheme(url.uri())),
         };
 
-        let mut scheme = match url.scheme()?.as_str() {
-            "http" | "https" => Self::http(url.clone())?,
-            "socks5" => Self::socks5(to_addr()?)?,
-            "socks5h" => Self::socks5h(to_addr()?)?,
-            scheme => return Err(Error::UnknownProxyScheme(scheme)),
-        };
-
-        if let Some(pwd) = url.password() {
-            let decoded_username = percent_decode(url.username().as_bytes()).decode_utf8_lossy();
-            let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
-            scheme = scheme.with_basic_auth(decoded_username, decoded_password);
-        }
+        // if let Some(pwd) = url.password() {
+        //     let decoded_username = percent_decode(url.username().as_bytes()).decode_utf8_lossy();
+        //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
+        //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
+        // }
 
         Ok(scheme)
     }
