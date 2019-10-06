@@ -221,3 +221,40 @@ impl Intercept {
 //     header.set_sensitive(true);
 //     header
 // }
+
+pub(crate) trait Addr {
+    fn scheme(&self) -> &str;
+    fn host(&self) -> &str;
+    fn port(&self) -> Option<u16>;
+}
+
+impl Addr for Url {
+    fn scheme(&self) -> &str {
+        &Url::scheme(self).unwrap_or("".to_string())
+    }
+
+    fn host(&self) -> &str {
+        Url::host(self)
+    }
+
+    fn port(&self) -> Option<u16> {
+        Url::port(self)
+    }
+}
+
+impl Addr for Uri {
+    fn scheme(&self) -> &str {
+        self.scheme_part()
+            .expect("Uri should have a scheme")
+            .as_str()
+    }
+
+    fn host(&self) -> &str {
+        Uri::host(self)
+            .expect("<Uri as Dst>::host should have a str")
+    }
+
+    fn port(&self) -> Option<u16> {
+        self.port_part().map(|p| p.as_u16())
+    }
+}
