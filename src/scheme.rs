@@ -1,5 +1,6 @@
 use crate::error::{Error, Result};
 
+#[derive(Clone, Debug)]
 pub enum Scheme {
     HTTP,
     HTTPS,
