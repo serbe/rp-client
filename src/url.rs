@@ -1,9 +1,8 @@
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::str::FromStr;
 
-use http::Uri;
-
 use crate::error::{Error, Result};
+use crate::scheme::Scheme;
 
 pub trait IntoUrl {
     fn into_url(self) -> Result<Url>;
@@ -39,7 +38,7 @@ impl<'a> IntoUrl for Uri {
 
 #[derive(Clone, Debug)]
 pub struct Url {
-    uri: Uri,
+    scheme: Scheme,
 }
 
 impl Url {

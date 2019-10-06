@@ -20,6 +20,8 @@ pub enum Error {
     NoHostPort(http::Uri),
     #[fail(display = "Uncnown proxy cheme {}", _0)]
     UnknownProxyScheme(http::Uri),
+    #[fail(display = "Unsupported scheme {}", _0)]
+    UnsupportedScheme(String),
 }
 
 impl From<std::io::Error> for Error {

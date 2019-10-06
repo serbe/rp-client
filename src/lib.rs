@@ -1,6 +1,7 @@
 pub mod error;
 pub mod proxy;
-pub mod url;
+pub mod scheme;
+// pub mod url;
 
 #[cfg(test)]
 mod tests {
