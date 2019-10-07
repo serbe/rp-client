@@ -1,5 +1,5 @@
 pub mod error;
-// pub mod proxy;
+pub mod proxy;
 pub mod addr;
 pub mod scheme;
 pub mod url;

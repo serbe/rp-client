@@ -1,19 +1,22 @@
+use std::str::FromStr;
 use std::net::SocketAddr;
 
-use http::{HeaderValue, Uri};
+// use http::{HeaderValue, Uri};
 
 use crate::error::{Error, Result};
-use crate::url::{IntoUrl, Url};
+use crate::url::{Url};
+use crate::userinfo::UserInfo;
+use crate::scheme::Scheme;
 
 pub trait IntoProxyScheme {
     fn into_proxy_scheme(self) -> Result<ProxyScheme>;
 }
 
-impl<T: IntoUrl> IntoProxyScheme for T {
-    fn into_proxy_scheme(self) -> Result<ProxyScheme> {
-        ProxyScheme::parse(self.into_url()?)
-    }
-}
+// impl<T: IntoUrl> IntoProxyScheme for T {
+//     fn into_proxy_scheme(self) -> Result<ProxyScheme> {
+//         ProxyScheme::parse(self.into_url()?)
+//     }
+// }
 
 impl IntoProxyScheme for ProxyScheme {
     fn into_proxy_scheme(self) -> Result<ProxyScheme> {
@@ -22,38 +25,41 @@ impl IntoProxyScheme for ProxyScheme {
 }
 
 #[derive(Clone, Debug)]
-pub struct Proxy {
-    intercept: Intercept,
+pub enum Proxy {
+    All(ProxyScheme),
+    Http(ProxyScheme),
+    Https(ProxyScheme),
+    Socks(ProxyScheme),
 }
 
 impl Proxy {
     pub fn http<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::new(Intercept::Http(
+        Ok(Proxy::Http(
             proxy_scheme.into_proxy_scheme()?,
-        )))
+        ))
     }
 
     pub fn https<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::new(Intercept::Https(
+        Ok(Proxy::Https(
             proxy_scheme.into_proxy_scheme()?,
-        )))
+        ))
     }
 
     pub fn all<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::new(Intercept::All(
+        Ok(Proxy::All(
             proxy_scheme.into_proxy_scheme()?,
-        )))
+        ))
     }
 
     pub fn socks<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::new(Intercept::Socks(
+        Ok(Proxy::Socks(
             proxy_scheme.into_proxy_scheme()?,
-        )))
+        ))
     }
 
-    fn new(intercept: Intercept) -> Proxy {
-        Proxy { intercept }
-    }
+    // fn new(intercept: Intercept) -> Proxy {
+    //     Proxy { intercept }
+    // }
 
     // pub fn basic_auth(mut self, username: &str, password: &str) -> Proxy {
     //     self.intercept.set_basic_auth(username, password);
@@ -117,21 +123,19 @@ impl Proxy {
 #[derive(Clone, Debug)]
 pub enum ProxyScheme {
     Http {
-        auth: Option<HeaderValue>,
-        uri: Url,
+        url: Url,
     },
     Socks5 {
         addr: SocketAddr,
-        auth: Option<(String, String)>,
+        auth: Option<UserInfo>,
         remote_dns: bool,
     },
 }
 
 impl ProxyScheme {
-    fn http<T: IntoUrl>(url: T) -> Result<Self> {
+    fn http(url: Url) -> Result<Self> {
         Ok(ProxyScheme::Http {
-            auth: None,
-            uri: url.into_url()?,
+            url,
         })
     }
 
@@ -172,13 +176,17 @@ impl ProxyScheme {
     //         }
     //     }
     // }
+}
 
-    fn parse(url: Url) -> Result<Self> {
-        let scheme = match url.scheme()?.as_bytes() {
-            b"http" | b"https" => Self::http(url.clone())?,
-            b"socks5" => Self::socks5(url.socket_addr()?)?,
-            b"socks5h" => Self::socks5h(url.socket_addr()?)?,
-            _ => return Err(Error::UnknownProxyScheme(url.uri())),
+impl FromStr for ProxyScheme {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let url = s.parse::<Url>()?;
+        let proxy_scheme = match url.scheme {
+            Scheme::HTTP | Scheme::HTTPS => Self::http(url)?,
+            Scheme::SOCKS5 => Self::socks5(url.socket_addr()?)?,
+            Scheme::SOCKS5H => Self::socks5h(url.socket_addr()?)?,
         };
 
         // if let Some(pwd) = url.password() {
@@ -187,19 +195,11 @@ impl ProxyScheme {
         //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
         // }
 
-        Ok(scheme)
+        Ok(proxy_scheme)
     }
 }
 
-#[derive(Clone, Debug)]
-enum Intercept {
-    All(ProxyScheme),
-    Http(ProxyScheme),
-    Https(ProxyScheme),
-    Socks(ProxyScheme),
-}
-
-impl Intercept {
+// impl Intercept {
     // fn set_basic_auth(&mut self, username: &str, password: &str) {
     //     match self {
     //         Intercept::All(ref mut s)
@@ -211,7 +211,7 @@ impl Intercept {
     //         }
     //     }
     // }
-}
+// }
 
 // pub(crate) fn encode_basic_auth(username: &str, password: &str) -> HeaderValue {
 //     let val = format!("{}:{}", username, password);
@@ -222,39 +222,39 @@ impl Intercept {
 //     header
 // }
 
-pub(crate) trait Addr {
-    fn scheme(&self) -> &str;
-    fn host(&self) -> &str;
-    fn port(&self) -> Option<u16>;
-}
+// pub(crate) trait Addr {
+//     fn scheme(&self) -> &str;
+//     fn host(&self) -> &str;
+//     fn port(&self) -> Option<u16>;
+// }
 
-impl Addr for Url {
-    fn scheme(&self) -> &str {
-        &Url::scheme(self).unwrap_or("".to_string())
-    }
+// impl Addr for Url {
+//     fn scheme(&self) -> &str {
+//         &Url::scheme(self).unwrap_or("".to_string())
+//     }
 
-    fn host(&self) -> &str {
-        Url::host(self)
-    }
+//     fn host(&self) -> &str {
+//         Url::host(self)
+//     }
 
-    fn port(&self) -> Option<u16> {
-        Url::port(self)
-    }
-}
+//     fn port(&self) -> Option<u16> {
+//         Url::port(self)
+//     }
+// }
 
-impl Addr for Uri {
-    fn scheme(&self) -> &str {
-        self.scheme_part()
-            .expect("Uri should have a scheme")
-            .as_str()
-    }
+// impl Addr for Uri {
+//     fn scheme(&self) -> &str {
+//         self.scheme_part()
+//             .expect("Uri should have a scheme")
+//             .as_str()
+//     }
 
-    fn host(&self) -> &str {
-        Uri::host(self)
-            .expect("<Uri as Dst>::host should have a str")
-    }
+//     fn host(&self) -> &str {
+//         Uri::host(self)
+//             .expect("<Uri as Dst>::host should have a str")
+//     }
 
-    fn port(&self) -> Option<u16> {
-        self.port_part().map(|p| p.as_u16())
-    }
-}
+//     fn port(&self) -> Option<u16> {
+//         self.port_part().map(|p| p.as_u16())
+//     }
+// }
