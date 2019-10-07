@@ -92,7 +92,7 @@ impl Url {
     pub fn host_port(&self) -> String {
         match self.default_port() {
             Some(port) => format!("{}:{}", self.host, port),
-            None => format!("{}", self.host)
+            None => self.host.to_owned(),
         }
     }
 

@@ -52,7 +52,7 @@ impl Scheme {
             Scheme::HTTPS => Some(443),
             Scheme::SOCKS5 => Some(1080),
             Scheme::SOCKS5H => Some(1080),
-            Scheme::Other(s) => None,
+            Scheme::Other(_) => None,
         }
     }
 }
