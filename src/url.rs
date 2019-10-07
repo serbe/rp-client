@@ -1,7 +1,7 @@
 use std::net::{SocketAddr, ToSocketAddrs};
-// use std::str::FromStr;
+use std::str::FromStr;
 
-// use crate::addr::Addr;
+use crate::addr::Addr;
 use crate::error::{Error, Result};
 use crate::scheme::Scheme;
 use crate::userinfo::UserInfo;
@@ -38,7 +38,7 @@ use crate::userinfo::UserInfo;
 //     }
 // }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Url {
     pub scheme: Scheme,
     pub userinfo: Option<UserInfo>,
@@ -71,64 +71,7 @@ impl Url {
     //     Url { uri }
     // }
 
-    pub fn from_str(s: &'static str) -> Result<Self> {
-        let raw = s;
-
-        let (raw, fragment) = from_split(raw.rsplitn(2, '#').collect());
-        let (raw, query) = from_split(raw.rsplitn(2, '?').collect());
-        let (raw, scheme) = from_rsplit(raw.rsplitn(2, "://").collect());
-        let scheme = Scheme::from_opt(scheme)?;
-        let (raw, userinfo) = from_rsplit(raw.rsplitn(2, "@").collect());
-        let userinfo = if let Some(user_info) = userinfo {
-            Some(UserInfo::from_str(&user_info))
-        } else {
-            None
-        };
-        let (raw, path) = from_split(raw.rsplitn(2, '/').collect());
-
-        let (host, port) = if let Some(pos) = raw.rfind(':') {
-            if let Some(start) = raw.find('[') {
-                if let Some(end) = raw.find(']') {
-                    if start == 0 && pos == end + 1 {
-                        (
-                            raw.get(..pos).ok_or_else(|| Error::ParseHost(raw))?,
-                            raw.get(pos + 1..),
-                        )
-                    } else if start == 0 && end == raw.len() - 1 {
-                        (raw, None)
-                    } else {
-                        Err(Error::ParseIPv6(raw))?
-                    }
-                } else {
-                    Err(Error::ParseIPv6(raw))?
-                }
-            } else {
-                (
-                    raw.get(..pos).ok_or_else(|| Error::ParseHost(raw))?,
-                    raw.get(pos + 1..),
-                )
-            }
-        } else {
-            (raw, None)
-        };
-
-        let host = host.to_owned();
-        let port = if let Some(p) = port {
-            Some(p.parse::<u16>().map_err(|_| Error::ParsePort(p))?)
-        } else {
-            None
-        };
-
-        Ok(Url {
-            scheme,
-            userinfo,
-            host,
-            port,
-            path,
-            query,
-            fragment,
-        })
-    }
+    
 
     //     fn into_uri(uri: Uri) -> Result<Self> {
     //         if uri.host().is_some() {
@@ -168,6 +111,73 @@ impl Url {
     //     pub fn uri(&self) -> Uri {
     //         self.uri.clone()
     //     }
+
+    // pub fn addr(&self) -> Addr {
+    //     Addr::from_str(&self.host_port())
+    // }
+}
+
+impl FromStr for Url {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let raw = s;
+
+        let (raw, fragment) = from_split(raw.rsplitn(2, '#').collect());
+        let (raw, query) = from_split(raw.rsplitn(2, '?').collect());
+        let (raw, scheme) = from_rsplit(raw.rsplitn(2, "://").collect());
+        let scheme = Scheme::from_opt(scheme)?;
+        let (raw, userinfo) = from_rsplit(raw.rsplitn(2, '@').collect());
+        let userinfo = if let Some(user_info) = userinfo {
+            Some(user_info.into())
+        } else {
+            None
+        };
+        let (raw, path) = from_split(raw.rsplitn(2, '/').collect());
+
+        let (host, port) = if let Some(pos) = raw.rfind(':') {
+            if let Some(start) = raw.find('[') {
+                if let Some(end) = raw.find(']') {
+                    if start == 0 && pos == end + 1 {
+                        (
+                            raw.get(..pos).ok_or_else(|| Error::ParseHost(raw.to_owned()))?,
+                            raw.get(pos + 1..),
+                        )
+                    } else if start == 0 && end == raw.len() - 1 {
+                        (raw, None)
+                    } else {
+                        return Err(Error::ParseIPv6(raw.to_owned()))
+                    }
+                } else {
+                    return Err(Error::ParseIPv6(raw.to_owned()))
+                }
+            } else {
+                (
+                    raw.get(..pos).ok_or_else(|| Error::ParseHost(raw.to_owned()))?,
+                    raw.get(pos + 1..),
+                )
+            }
+        } else {
+            (raw, None)
+        };
+
+        let host = host.to_owned();
+        let port = if let Some(p) = port {
+            Some(p.parse::<u16>().map_err(|_| Error::ParsePort(p.to_owned()))?)
+        } else {
+            None
+        };
+
+        Ok(Url {
+            scheme,
+            userinfo,
+            host,
+            port,
+            path,
+            query,
+            fragment,
+        })
+    }
 }
 
 // impl<'a> TryFrom<&'a str> for Url {
