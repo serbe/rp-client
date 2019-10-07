@@ -1,7 +1,7 @@
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::str::FromStr;
 
-use crate::addr::Addr;
+// use crate::addr::Addr;
 use crate::error::{Error, Result};
 use crate::scheme::Scheme;
 use crate::userinfo::UserInfo;
@@ -71,8 +71,6 @@ impl Url {
     //     Url { uri }
     // }
 
-    
-
     //     fn into_uri(uri: Uri) -> Result<Self> {
     //         if uri.host().is_some() {
     //             Ok(Url::new(uri))
@@ -140,20 +138,22 @@ impl FromStr for Url {
                 if let Some(end) = raw.find(']') {
                     if start == 0 && pos == end + 1 {
                         (
-                            raw.get(..pos).ok_or_else(|| Error::ParseHost(raw.to_owned()))?,
+                            raw.get(..pos)
+                                .ok_or_else(|| Error::ParseHost(raw.to_owned()))?,
                             raw.get(pos + 1..),
                         )
                     } else if start == 0 && end == raw.len() - 1 {
                         (raw, None)
                     } else {
-                        return Err(Error::ParseIPv6(raw.to_owned()))
+                        return Err(Error::ParseIPv6(raw.to_owned()));
                     }
                 } else {
-                    return Err(Error::ParseIPv6(raw.to_owned()))
+                    return Err(Error::ParseIPv6(raw.to_owned()));
                 }
             } else {
                 (
-                    raw.get(..pos).ok_or_else(|| Error::ParseHost(raw.to_owned()))?,
+                    raw.get(..pos)
+                        .ok_or_else(|| Error::ParseHost(raw.to_owned()))?,
                     raw.get(pos + 1..),
                 )
             }
@@ -163,7 +163,10 @@ impl FromStr for Url {
 
         let host = host.to_owned();
         let port = if let Some(p) = port {
-            Some(p.parse::<u16>().map_err(|_| Error::ParsePort(p.to_owned()))?)
+            Some(
+                p.parse::<u16>()
+                    .map_err(|_| Error::ParsePort(p.to_owned()))?,
+            )
         } else {
             None
         };
