@@ -1,9 +1,9 @@
-use std::str::FromStr;
 use std::fmt;
+use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Scheme {
     HTTP,
     HTTPS,
@@ -57,11 +57,11 @@ impl Scheme {
     }
 }
 
-impl Default for Scheme {
-    fn default() -> Self {
-        Scheme::HTTP
-    }
-}
+// impl Default for Scheme {
+//     fn default() -> Self {
+//         Scheme::HTTP
+//     }
+// }
 
 impl<'a> IntoScheme for &'a str {
     fn into_scheme(self) -> Result<Scheme> {
@@ -90,7 +90,7 @@ impl FromStr for Scheme {
                 } else {
                     Err(Error::UnsupportedScheme(s.to_owned()))
                 }
-            },
+            }
         }
     }
 }
