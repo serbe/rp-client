@@ -4,6 +4,9 @@ pub mod addr;
 pub mod scheme;
 pub mod url;
 pub mod userinfo;
+pub mod request;
+pub mod method;
+pub mod version;
 
 // #[cfg(test)]
 // #[macro_use]
