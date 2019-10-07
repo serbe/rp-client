@@ -8,10 +8,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[fail(display = "{}", _0)]
     Io(#[cause] std::io::Error),
-    // #[fail(display = "{}", _0)]
-    // InvalidUri(#[cause] http::uri::InvalidUri),
-    // #[fail(display = "Uri {} no have host", _0)]
-    // NoHost(http::Uri),
+    #[fail(display = "Unknown method {}", _0)]
+    UnknownMethod(String),
+    #[fail(display = "Unsupported version {}", _0)]
+    UnsupportedVersion(String),
     // #[fail(display = "Uri {:?} no have scheme", _0)]
     // NoScheme(http::Uri),
     // #[fail(display = "Uri {} no have port", _0)]
@@ -25,19 +25,19 @@ pub enum Error {
     #[fail(display = "None string")]
     NoneString,
     #[fail(display = "Parse fragmeng {}", _0)]
-    ParseFragment(&'static str),
+    ParseFragment(String),
     #[fail(display = "Parse query {}", _0)]
-    ParseQuery(&'static str),
+    ParseQuery(String),
     #[fail(display = "Parse scheme {}", _0)]
-    ParseScheme(&'static str),
+    ParseScheme(String),
     #[fail(display = "Parse user info {}", _0)]
-    ParseUserInfo(&'static str),
+    ParseUserInfo(String),
     #[fail(display = "Parse host {}", _0)]
-    ParseHost(&'static str),
+    ParseHost(String),
     #[fail(display = "Parse ip version 6 {}", _0)]
-    ParseIPv6(&'static str),
+    ParseIPv6(String),
     #[fail(display = "Parse port {}", _0)]
-    ParsePort(&'static str),
+    ParsePort(String),
 }
 
 impl From<std::io::Error> for Error {
