@@ -12,8 +12,8 @@ pub enum Error {
     UnknownMethod(String),
     #[fail(display = "Unsupported version {}", _0)]
     UnsupportedVersion(String),
-    // #[fail(display = "Uri {:?} no have scheme", _0)]
-    // NoScheme(http::Uri),
+    #[fail(display = "Uri no have scheme")]
+    EmptyScheme,
     // #[fail(display = "Uri {} no have port", _0)]
     // NoPort(http::Uri),
     // #[fail(display = "Uri {} no have host and port", _0)]

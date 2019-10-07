@@ -40,7 +40,7 @@ use crate::userinfo::UserInfo;
 
 #[derive(Clone, Debug, Default)]
 pub struct Url {
-    pub scheme: Scheme,
+    pub scheme: Option<Scheme>,
     pub userinfo: Option<UserInfo>,
     pub host: String,
     pub port: Option<u16>,
@@ -79,23 +79,32 @@ impl Url {
     //         }
     //     }
 
-    pub fn default_port(&self) -> u16 {
+    pub fn default_port(&self) -> Option<u16> {
         match self.port {
-            Some(port) => port,
-            None => self.scheme.default_port(),
+            Some(port) => Some(port),
+            None => match &self.scheme {
+                Some(scheme) => scheme.default_port(),
+                None => None,
+            }
         }
     }
 
     pub fn host_port(&self) -> String {
-        format!("{}:{}", self.host, self.default_port())
+        match self.default_port() {
+            Some(port) => format!("{}:{}", self.host, port),
+            None => format!("{}", self.host)
+        }
     }
 
-    pub fn scheme(&self) -> String {
-        self.scheme.to_string()
-    }
+    // pub fn scheme(&self) -> String {
+    //     self.scheme.to_string()
+    // }
 
     pub fn origin(&self) -> String {
-        format!("{}://{}", self.scheme.to_string(), self.host_port())
+        match &self.scheme {
+            Some(scheme) => format!("{}://{}", scheme, self.host_port()),
+            None => self.host_port()
+        }
     }
 
     fn socket_addrs(&self) -> Result<Vec<SocketAddr>> {
@@ -124,7 +133,10 @@ impl FromStr for Url {
         let (raw, fragment) = from_split(raw.rsplitn(2, '#').collect());
         let (raw, query) = from_split(raw.rsplitn(2, '?').collect());
         let (raw, scheme) = from_rsplit(raw.rsplitn(2, "://").collect());
-        let scheme = Scheme::from_opt(scheme)?;
+        let scheme = match scheme {
+            Some(scheme) => Some(Scheme::from_str(&scheme)?),
+            None => None,
+        };
         let (raw, userinfo) = from_rsplit(raw.rsplitn(2, '@').collect());
         let userinfo = if let Some(user_info) = userinfo {
             Some(user_info.into())

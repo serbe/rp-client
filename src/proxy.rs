@@ -183,19 +183,19 @@ impl FromStr for ProxyScheme {
 
     fn from_str(s: &str) -> Result<Self> {
         let url = s.parse::<Url>()?;
-        let proxy_scheme = match url.scheme {
-            Scheme::HTTP | Scheme::HTTPS => Self::http(url)?,
-            Scheme::SOCKS5 => Self::socks5(url.socket_addr()?)?,
-            Scheme::SOCKS5H => Self::socks5h(url.socket_addr()?)?,
-        };
+        match url.scheme {
+            Some(Scheme::HTTP) | Some(Scheme::HTTPS) => Self::http(url),
+            Some(Scheme::SOCKS5) => Self::socks5(url.socket_addr()?),
+            Some(Scheme::SOCKS5H) => Self::socks5h(url.socket_addr()?),
+            Some(Scheme::Other(scheme)) => Err(Error::UnsupportedScheme(scheme)),
+            None => Err(Error::EmptyScheme)
+        }
 
         // if let Some(pwd) = url.password() {
         //     let decoded_username = percent_decode(url.username().as_bytes()).decode_utf8_lossy();
         //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
         //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
         // }
-
-        Ok(proxy_scheme)
     }
 }
 
