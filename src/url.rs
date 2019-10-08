@@ -58,7 +58,7 @@ fn from_split(split: Vec<&str>) -> (&str, Option<String>) {
     }
 }
 
-fn from_rsplit(split: Vec<&str>) -> (&str, Option<String>) {
+fn from_split_rev(split: Vec<&str>) -> (&str, Option<String>) {
     if split.len() == 2 {
         (split[1], Some(split[0].to_owned()))
     } else {
@@ -132,18 +132,18 @@ impl FromStr for Url {
 
         let (raw, fragment) = from_split(raw.rsplitn(2, '#').collect());
         let (raw, query) = from_split(raw.rsplitn(2, '?').collect());
-        let (raw, scheme) = from_rsplit(raw.rsplitn(2, "://").collect());
+        let (raw, scheme) = from_split_rev(raw.splitn(2, "://").collect());
         let scheme = match scheme {
             Some(scheme) => Some(Scheme::from_str(&scheme)?),
             None => None,
         };
-        let (raw, userinfo) = from_rsplit(raw.rsplitn(2, '@').collect());
+        let (raw, userinfo) = from_split_rev(raw.splitn(2, '@').collect());
         let userinfo = if let Some(user_info) = userinfo {
             Some(user_info.into())
         } else {
             None
         };
-        let (raw, path) = from_split(raw.rsplitn(2, '/').collect());
+        let (raw, path) = from_split(raw.splitn(2, '/').collect());
 
         let (host, port) = if let Some(pos) = raw.rfind(':') {
             if let Some(start) = raw.find('[') {
@@ -284,6 +284,10 @@ mod tests {
     // 	u.scheme = Some("ftp");
     // 	// u.user = Some("john doe");
     // 	u.user = Some("john%20doe");
+    // u.userinfo = Some(UserInfo {
+    //         username: "webmaster".to_owned(),
+    //         password: String::new(),
+    //     });
     // 	u.host = "www.example.org";
     // 	u.path = Some("/".to_owned());
     // 	assert_eq!(s, u);
@@ -326,7 +330,7 @@ mod tests {
     // fn query_with_hex_escaping() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://www.example.org/?q=go%20language").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "www.example.org".to_owned();
     //     u.path = Some("/".to_owned());
     //     u.query = Some("q=go%20language");
@@ -337,7 +341,7 @@ mod tests {
     // fn outside_query() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://www.example.org/a%20b?q=c+d").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "www.example.org".to_owned();
     //     u.path = Some("/a b");
     //     u.query = Some("q=c+d");
@@ -348,7 +352,7 @@ mod tests {
     fn path_without_leading2() {
         let mut u = Url::default();
         let s = Url::from_str("http://www.example.org/?q=rust+language").unwrap();
-        u.scheme = Some("http");
+        u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
         u.query = Some("q=rust+language".to_owned());
@@ -359,7 +363,7 @@ mod tests {
     // fn path_without_leading() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http:%2f%2fwww.example.org/?q=rust+language").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     // Opaque:   "%2f%2fwww.example.org/",
     //     u.query = Some("q=rust+language");
     //     assert_eq!(s, u);
@@ -369,8 +373,11 @@ mod tests {
     fn non() {
         let mut u = Url::default();
         let s = Url::from_str("mailto://webmaster@example.org").unwrap();
-        u.scheme = Some("mailto");
-        u.user = Some("webmaster");
+        u.scheme = Some(Scheme::Other("mailto".to_owned()));
+        u.userinfo = Some(UserInfo {
+            username: "webmaster".to_owned(),
+            password: String::new(),
+        });
         u.host = "example.org".to_owned();
         assert_eq!(s, u);
     }
@@ -396,7 +403,10 @@ mod tests {
     fn leading2() {
         let mut u = Url::default();
         let s = Url::from_str("user@foo/path?a=b").unwrap();
-        u.user = Some("user");
+        u.userinfo = Some(UserInfo {
+            username: "user".to_owned(),
+            password: String::new(),
+        });
         u.host = "foo".to_owned();
         u.path = Some("/path".to_owned());
         u.query = Some("a=b".to_owned());
@@ -423,7 +433,11 @@ mod tests {
     // fn escaped() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://%3Fam:pa%3Fsword@google.com").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
+    // u.userinfo = Some(UserInfo {
+    //     username: "webmaster".to_owned(),
+    //     password: String::new(),
+    // });
     //     u.user = Some("?am");
     //     u.password = Some("pa?sword");
     //     u.host = "google.com";
@@ -434,8 +448,8 @@ mod tests {
     fn host_subcomponent() {
         let mut u = Url::default();
         let s = Url::from_str("http://192.168.0.1/").unwrap();
-        u.scheme = Some("http");
-        u.host = "192.168.0.1";
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "192.168.0.1".to_owned();
         u.path = Some("/".to_owned());
         assert_eq!(s, u);
     }
@@ -444,9 +458,9 @@ mod tests {
     fn host_and_port_subcomponents() {
         let mut u = Url::default();
         let s = Url::from_str("http://192.168.0.1:8080/").unwrap();
-        u.scheme = Some("http");
-        u.host = "192.168.0.1";
-        u.port = Some("8080");
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "192.168.0.1".to_owned();
+        u.port = Some(8080);
         u.path = Some("/".to_owned());
         assert_eq!(s, u);
     }
@@ -455,8 +469,8 @@ mod tests {
     fn host_subcomponent2() {
         let mut u = Url::default();
         let s = Url::from_str("http://[fe80::1]/").unwrap();
-        u.scheme = Some("http");
-        u.host = "[fe80::1]";
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "[fe80::1]".to_owned();
         u.path = Some("/".to_owned());
         assert_eq!(s, u);
     }
@@ -465,9 +479,9 @@ mod tests {
     fn host_and_port_subcomponents2() {
         let mut u = Url::default();
         let s = Url::from_str("http://[fe80::1]:8080/").unwrap();
-        u.scheme = Some("http");
-        u.host = "[fe80::1]";
-        u.port = Some("8080");
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "[fe80::1]".to_owned();
+        u.port = Some(8080);
         u.path = Some("/".to_owned());
         assert_eq!(s, u);
     }
@@ -476,7 +490,7 @@ mod tests {
     // fn host_subcomponent3() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://[fe80::1%25en0]/").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en0]";
     //     u.path = Some("/".to_owned());
     //     assert_eq!(s, u);
@@ -486,7 +500,7 @@ mod tests {
     // fn host_and_port_subcomponents3() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://[fe80::1%25en0]:8080/").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en0]";
     //     u.port = Some("8080");
     //     u.path = Some("/".to_owned());
@@ -497,7 +511,7 @@ mod tests {
     // fn host_subcomponent4() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http:[fe80::1%25%65%6e%301-._~]/").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en01-._~]";
     //     u.path = Some("/".to_owned());
     //     assert_eq!(s, u);
@@ -507,7 +521,7 @@ mod tests {
     // fn host_and_port_subcomponents4() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http:[fe80::1%25%65%6e%301-._~]:8080/").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en01-._~]";
     //     u.port = Some("8080");
     //     u.path = Some("/".to_owned());
@@ -518,7 +532,7 @@ mod tests {
     // fn alternate_escapings_of_path_survive_round_trip() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://rest.rsc.io/foo%2fbar/baz%2Fquux?alt=media").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "rest.rsc.io";
     //     u.path = Some("/foo/bar/baz/quux");
     //     // Rawu.path = Some("/foo%2fbar/baz%2Fquux");
@@ -530,9 +544,9 @@ mod tests {
     fn issue_12036() {
         let mut u = Url::default();
         let s = Url::from_str("mysql://a,b,c/bar").unwrap();
-        u.scheme = Some("mysql");
-        u.host = "a,b,c";
-        u.path = Some("/bar");
+        u.scheme = Some(Scheme::Other("mysql".to_owned()));
+        u.host = "a,b,c".to_owned();
+        u.path = Some("/bar".to_owned());
         assert_eq!(s, u);
     }
 
@@ -551,7 +565,7 @@ mod tests {
     // fn worst_case_path() {
     //     let mut u = Url::default();
     //     let s = Url::from_str("http://host/!$&'()*+,;=:@[hello]").unwrap();
-    //     u.scheme = Some("http");
+    //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "host";
     //     u.path = Some("/!$&'()*+,;=:@[hello]");
     //     // Rawu.path = Some("/!$&'()*+,;=:@[hello]");
@@ -562,9 +576,9 @@ mod tests {
     fn example() {
         let mut u = Url::default();
         let s = Url::from_str("http://example.com/oid/[order_id]").unwrap();
-        u.scheme = Some("http");
-        u.host = "example.com";
-        u.path = Some("/oid/[order_id]");
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "example.com".to_owned();
+        u.path = Some("/oid/[order_id]".to_owned());
         // Rawu.path = Some("/oid/[order_id]");
         assert_eq!(s, u);
     }
@@ -573,16 +587,16 @@ mod tests {
     fn example2() {
         let mut u = Url::default();
         let s = Url::from_str("http://192.168.0.2:8080/foo").unwrap();
-        u.scheme = Some("http");
-        u.host = "192.168.0.2";
-        u.port = Some("8080");
-        u.path = Some("/foo");
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "192.168.0.2".to_owned();
+        u.port = Some(8080);
+        u.path = Some("/foo".to_owned());
         assert_eq!(s, u);
     }
 
     //      let mut u = Url::default();
     //      let s = Url::from_str("http://192.168.0.2:/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "192.168.0.2:";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -591,7 +605,7 @@ mod tests {
     //      let mut u = Url::default();
     //      	 Malformed IPv6 but still accepted.
     //      let s = Url::from_str("http://2b01:e34:ef40:7730:8e70:5aff:fefe:edac:8080/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "2b01:e34:ef40:7730:8e70:5aff:fefe:edac:8080";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -600,7 +614,7 @@ mod tests {
     //      let mut u = Url::default();
     //      	 Malformed IPv6 but still accepted.
     //      let s = Url::from_str("http://2b01:e34:ef40:7730:8e70:5aff:fefe:edac:/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "2b01:e34:ef40:7730:8e70:5aff:fefe:edac:";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -608,7 +622,7 @@ mod tests {
 
     //      let mut u = Url::default();
     //      let s = Url::from_str("http:[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:8080/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:8080";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -616,7 +630,7 @@ mod tests {
 
     //      let mut u = Url::default();
     //      let s = Url::from_str("http:[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -626,15 +640,15 @@ mod tests {
     fn example3() {
         let mut u = Url::default();
         let s = Url::from_str("http://hello.世界.com/foo").unwrap();
-        u.scheme = Some("http");
-        u.host = "hello.世界.com";
-        u.path = Some("/foo");
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "hello.世界.com".to_owned();
+        u.path = Some("/foo".to_owned());
         assert_eq!(s, u);
     }
 
     //      let mut u = Url::default();
     //      let s = Url::from_str("http://hello.%e4%b8%96%e7%95%8c.com/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "hello.世界.com";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -643,7 +657,7 @@ mod tests {
 
     //      let mut u = Url::default();
     //      let s = Url::from_str("http://hello.%E4%B8%96%E7%95%8C.com/foo").unwrap();
-    //      		u.scheme = Some("http");
+    //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "hello.世界.com";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
@@ -653,9 +667,9 @@ mod tests {
     fn example4() {
         let mut u = Url::default();
         let s = Url::from_str("http://example.com//foo").unwrap();
-        u.scheme = Some("http");
-        u.host = "example.com";
-        u.path = Some("//foo");
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "example.com".to_owned();
+        u.path = Some("//foo".to_owned());
         assert_eq!(s, u);
     }
 
@@ -663,9 +677,9 @@ mod tests {
     fn test_that_we_can_reparse_the_host_names_we_accept() {
         let mut u = Url::default();
         let s = Url::from_str("myscheme://authority<\"hi\">/foo").unwrap();
-        u.scheme = Some("myscheme");
-        u.host = "authority<\"hi\">";
-        u.path = Some("/foo");
+        u.scheme = Some(Scheme::Other("myscheme".to_owned()));
+        u.host = "authority<\"hi\">".to_owned();
+        u.path = Some("/foo".to_owned());
         assert_eq!(s, u);
     }
 
