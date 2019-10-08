@@ -1,20 +1,20 @@
-use std::str::FromStr;
 use std::net::SocketAddr;
+use std::str::FromStr;
 
 // use http::{HeaderValue, Uri};
 
 use crate::error::{Error, Result};
-use crate::url::{Url};
-use crate::userinfo::UserInfo;
 use crate::scheme::Scheme;
+use crate::uri::Uri;
+use crate::userinfo::UserInfo;
 
 pub trait IntoProxyScheme {
     fn into_proxy_scheme(self) -> Result<ProxyScheme>;
 }
 
-// impl<T: IntoUrl> IntoProxyScheme for T {
+// impl<T: IntoUri> IntoProxyScheme for T {
 //     fn into_proxy_scheme(self) -> Result<ProxyScheme> {
-//         ProxyScheme::parse(self.into_url()?)
+//         ProxyScheme::parse(self.into_uri()?)
 //     }
 // }
 
@@ -34,27 +34,19 @@ pub enum Proxy {
 
 impl Proxy {
     pub fn http<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::Http(
-            proxy_scheme.into_proxy_scheme()?,
-        ))
+        Ok(Proxy::Http(proxy_scheme.into_proxy_scheme()?))
     }
 
     pub fn https<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::Https(
-            proxy_scheme.into_proxy_scheme()?,
-        ))
+        Ok(Proxy::Https(proxy_scheme.into_proxy_scheme()?))
     }
 
     pub fn all<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::All(
-            proxy_scheme.into_proxy_scheme()?,
-        ))
+        Ok(Proxy::All(proxy_scheme.into_proxy_scheme()?))
     }
 
     pub fn socks<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::Socks(
-            proxy_scheme.into_proxy_scheme()?,
-        ))
+        Ok(Proxy::Socks(proxy_scheme.into_proxy_scheme()?))
     }
 
     // fn new(intercept: Intercept) -> Proxy {
@@ -123,7 +115,7 @@ impl Proxy {
 #[derive(Clone, Debug)]
 pub enum ProxyScheme {
     Http {
-        url: Url,
+        uri: Uri,
     },
     Socks5 {
         addr: SocketAddr,
@@ -133,10 +125,8 @@ pub enum ProxyScheme {
 }
 
 impl ProxyScheme {
-    fn http(url: Url) -> Result<Self> {
-        Ok(ProxyScheme::Http {
-            url,
-        })
+    fn http(uri: Uri) -> Result<Self> {
+        Ok(ProxyScheme::Http { uri })
     }
 
     fn socks5(addr: SocketAddr) -> Result<Self> {
@@ -182,17 +172,17 @@ impl FromStr for ProxyScheme {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let url = s.parse::<Url>()?;
-        match url.scheme {
-            Some(Scheme::HTTP) | Some(Scheme::HTTPS) => Self::http(url),
-            Some(Scheme::SOCKS5) => Self::socks5(url.socket_addr()?),
-            Some(Scheme::SOCKS5H) => Self::socks5h(url.socket_addr()?),
+        let uri = s.parse::<Uri>()?;
+        match uri.scheme {
+            Some(Scheme::HTTP) | Some(Scheme::HTTPS) => Self::http(uri),
+            Some(Scheme::SOCKS5) => Self::socks5(uri.socket_addr()?),
+            Some(Scheme::SOCKS5H) => Self::socks5h(uri.socket_addr()?),
             Some(Scheme::Other(scheme)) => Err(Error::UnsupportedScheme(scheme)),
-            None => Err(Error::EmptyScheme)
+            None => Err(Error::EmptyScheme),
         }
 
-        // if let Some(pwd) = url.password() {
-        //     let decoded_username = percent_decode(url.username().as_bytes()).decode_utf8_lossy();
+        // if let Some(pwd) = uri.password() {
+        //     let decoded_username = percent_decode(uri.username().as_bytes()).decode_utf8_lossy();
         //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
         //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
         // }
@@ -200,17 +190,17 @@ impl FromStr for ProxyScheme {
 }
 
 // impl Intercept {
-    // fn set_basic_auth(&mut self, username: &str, password: &str) {
-    //     match self {
-    //         Intercept::All(ref mut s)
-    //         | Intercept::Http(ref mut s)
-    //         | Intercept::Https(ref mut s) => s.set_basic_auth(username, password),
-    //         Intercept::Socks(ref mut s) => {
-    //             let header = encode_basic_auth(username, password);
-    //             custom.auth = Some(header);
-    //         }
-    //     }
-    // }
+// fn set_basic_auth(&mut self, username: &str, password: &str) {
+//     match self {
+//         Intercept::All(ref mut s)
+//         | Intercept::Http(ref mut s)
+//         | Intercept::Https(ref mut s) => s.set_basic_auth(username, password),
+//         Intercept::Socks(ref mut s) => {
+//             let header = encode_basic_auth(username, password);
+//             custom.auth = Some(header);
+//         }
+//     }
+// }
 // }
 
 // pub(crate) fn encode_basic_auth(username: &str, password: &str) -> HeaderValue {
@@ -228,17 +218,17 @@ impl FromStr for ProxyScheme {
 //     fn port(&self) -> Option<u16>;
 // }
 
-// impl Addr for Url {
+// impl Addr for Uri {
 //     fn scheme(&self) -> &str {
-//         &Url::scheme(self).unwrap_or("".to_string())
+//         &uri::scheme(self).unwrap_or("".to_string())
 //     }
 
 //     fn host(&self) -> &str {
-//         Url::host(self)
+//         uri::host(self)
 //     }
 
 //     fn port(&self) -> Option<u16> {
-//         Url::port(self)
+//         uri::port(self)
 //     }
 // }
 

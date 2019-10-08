@@ -6,43 +6,36 @@ use crate::error::{Error, Result};
 use crate::scheme::Scheme;
 use crate::userinfo::UserInfo;
 
+pub trait IntoUri {
+    fn into_uri(self) -> Result<Uri>;
+}
 
-// https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=e19f3d313ad22db7363658b96fd2b390
+impl IntoUri for Uri {
+    fn into_uri(self) -> Result<Uri> {
+        Ok(self)
+    }
+}
 
-// pub trait IntoUrl {
-//     fn into_url(self) -> Result<Url>;
-// }
+impl<'a> IntoUri for &'a str {
+    fn into_uri(self) -> Result<Uri> {
+        self.parse::<Uri>()?.into_uri()
+    }
+}
 
-// impl IntoUrl for Url {
-//     fn into_url(self) -> Result<Url> {
-//         if self.uri.host().is_some() {
-//             Ok(self)
-//         } else {
-//             Err(Error::NoHost(self.uri))
-//         }
-//     }
-// }
+impl<'a> IntoUri for &'a String {
+    fn into_uri(self) -> Result<Uri> {
+        self.parse::<Uri>()?.into_uri()
+    }
+}
 
-// impl<'a> IntoUrl for &'a str {
-//     fn into_url(self) -> Result<Url> {
-//         self.parse::<Url>()?.into_url()
-//     }
-// }
-
-// impl<'a> IntoUrl for &'a String {
-//     fn into_url(self) -> Result<Url> {
-//         self.parse::<Url>()?.into_url()
-//     }
-// }
-
-// impl<'a> IntoUrl for Uri {
-//     fn into_url(self) -> Result<Url> {
-//         Url::new(self).into_url()
+// impl<'a> IntoUri for Uri {
+//     fn into_uri(self) -> Result<Uri> {
+//         Uri::new(self).into_uri()
 //     }
 // }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Url {
+pub struct Uri {
     pub scheme: Option<Scheme>,
     pub userinfo: Option<UserInfo>,
     pub host: String,
@@ -53,14 +46,14 @@ pub struct Url {
     // pub addr: Addr,
 }
 
-impl Url {
+impl Uri {
     // pub fn new(uri: Uri) -> Self {
-    //     Url { uri }
+    //     Uri { uri }
     // }
 
     //     fn into_uri(uri: Uri) -> Result<Self> {
     //         if uri.host().is_some() {
-    //             Ok(Url::new(uri))
+    //             Ok(Uri::new(uri))
     //         } else {
     //             Err(Error::NoHost(uri))
     //         }
@@ -135,7 +128,7 @@ impl Url {
     // }
 }
 
-impl FromStr for Url {
+impl FromStr for Uri {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
@@ -203,7 +196,7 @@ impl FromStr for Url {
             None
         };
 
-        Ok(Url {
+        Ok(Uri {
             scheme,
             userinfo,
             host,
@@ -215,38 +208,38 @@ impl FromStr for Url {
     }
 }
 
-// impl<'a> TryFrom<&'a str> for Url {
+// impl<'a> TryFrom<&'a str> for Uri {
 //     type Error = Error;
 
-//     fn try_from(uri: &'a str) -> Result<Url> {
-//         Url::into_uri(uri.parse::<Uri>()?)
+//     fn try_from(uri: &'a str) -> Result<Uri> {
+//         Uri::into_uri(uri.parse::<Uri>()?)
 //     }
 // }
 
-// impl TryFrom<String> for Url {
+// impl TryFrom<String> for Uri {
 //     type Error = Error;
 
-//     fn try_from(uri: String) -> Result<Url> {
-//         Url::into_uri(uri.parse::<Uri>()?)
+//     fn try_from(uri: String) -> Result<Uri> {
+//         Uri::into_uri(uri.parse::<Uri>()?)
 //     }
 // }
 
-// impl FromStr for Url {
+// impl FromStr for Uri {
 //     type Err = Error;
 
 //     fn from_str(s: &str) -> Result<Self> {
-//         Url::into_uri(s.parse::<Uri>()?)
+//         Uri::into_uri(s.parse::<Uri>()?)
 //     }
 // }
 
 // pub(crate) fn expect_uri(uri: &Uri) -> Uri {
 //     uri.as_str()
 //         .parse()
-//         .expect("a parsed Url should always be a valid Uri")
+//         .expect("a parsed Uri should always be a valid Uri")
 // }
 
-// pub(crate) fn try_uri(url: &Url) -> Option<::hyper::Uri> {
-//     url.as_str().parse().ok()
+// pub(crate) fn try_uri(uri: &Uri) -> Option<::hyper::Uri> {
+//     uri.as_str().parse().ok()
 // }
 
 fn from_split(split: Vec<&str>) -> (&str, Option<String>) {
@@ -297,8 +290,8 @@ mod tests {
 
     #[test]
     fn no_path() {
-        let s = Url::from_str("http://www.example.org").unwrap();
-        let mut u = Url::default();
+        let s = Uri::from_str("http://www.example.org").unwrap();
+        let mut u = Uri::default();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         assert_eq!(s, u);
@@ -306,8 +299,8 @@ mod tests {
 
     #[test]
     fn with_path() {
-        let s = Url::from_str("http://www.example.org/").unwrap();
-        let mut u = Url::default();
+        let s = Uri::from_str("http://www.example.org/").unwrap();
+        let mut u = Uri::default();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
@@ -316,19 +309,19 @@ mod tests {
 
     #[test]
     fn path_with_hex_escaping() {
-    	let mut u = Url::default();
-    	let s = Url::from_str("http://www.example.org/file%20one%26two").unwrap();
-    	u.scheme = Some(Scheme::HTTP);
-    	u.host = "www.example.org".to_owned();
-    	u.path = Some("/file%20one%26two".to_owned());
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/file%20one%26two").unwrap();
+        u.scheme = Some(Scheme::HTTP);
+        u.host = "www.example.org".to_owned();
+        u.path = Some("/file%20one%26two".to_owned());
         assert_eq!(u.decode_path(), Some("/file one&two".to_owned()));
-    	assert_eq!(s, u);
+        assert_eq!(s, u);
     }
 
     #[test]
     fn user() {
-        let mut u = Url::default();
-        let s = Url::from_str("ftp://webmaster@www.example.org/").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("ftp://webmaster@www.example.org/").unwrap();
         u.scheme = Some(Scheme::Other("ftp".to_owned()));
         u.userinfo = Some(UserInfo {
             username: "webmaster".to_owned(),
@@ -341,23 +334,23 @@ mod tests {
 
     #[test]
     fn escape_sequence_in_username() {
-    	let mut u = Url::default();
-    	let s = Url::from_str("ftp://john%20doe@www.example.org/").unwrap();
-    	u.scheme = Some(Scheme::Other("ftp".to_owned()));
+        let mut u = Uri::default();
+        let s = Uri::from_str("ftp://john%20doe@www.example.org/").unwrap();
+        u.scheme = Some(Scheme::Other("ftp".to_owned()));
         u.userinfo = Some(UserInfo {
             username: "john%20doe".to_owned(),
             password: String::new(),
         });
-    	u.host = "www.example.org".to_owned();
-    	u.path = Some("/".to_owned());
+        u.host = "www.example.org".to_owned();
+        u.path = Some("/".to_owned());
         assert_eq!(u.decode_user(), Some("john doe".to_owned()));
-    	assert_eq!(s, u);
+        assert_eq!(s, u);
     }
 
     #[test]
     fn empty_query() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://www.example.org/?").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/?").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
@@ -367,8 +360,8 @@ mod tests {
 
     #[test]
     fn query_ending_in_question_mark() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://www.example.org/?foo=bar?").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/?foo=bar?").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
@@ -378,8 +371,8 @@ mod tests {
 
     #[test]
     fn query() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://www.example.org/?q=rust+language").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/?q=rust+language").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
@@ -389,8 +382,8 @@ mod tests {
 
     #[test]
     fn query_with_hex_escaping() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://www.example.org/?q=go%20language").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/?q=go%20language").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
@@ -400,8 +393,8 @@ mod tests {
 
     #[test]
     fn outside_query() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://www.example.org/a%20b?q=c+d").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/a%20b?q=c+d").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/a%20b".to_owned());
@@ -412,8 +405,8 @@ mod tests {
 
     #[test]
     fn path_without_leading2() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://www.example.org/?q=rust+language").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://www.example.org/?q=rust+language").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "www.example.org".to_owned();
         u.path = Some("/".to_owned());
@@ -423,8 +416,8 @@ mod tests {
 
     // #[test]
     // fn path_without_leading() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("http:%2f%2fwww.example.org/?q=rust+language").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("http:%2f%2fwww.example.org/?q=rust+language").unwrap();
     //     u.scheme = Some(Scheme::HTTP);
     //     // Opaque:   "%2f%2fwww.example.org/",
     //     u.query = Some("q=rust+language");
@@ -433,8 +426,8 @@ mod tests {
 
     #[test]
     fn non() {
-        let mut u = Url::default();
-        let s = Url::from_str("mailto://webmaster@example.org").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("mailto://webmaster@example.org").unwrap();
         u.scheme = Some(Scheme::Other("mailto".to_owned()));
         u.userinfo = Some(UserInfo {
             username: "webmaster".to_owned(),
@@ -446,8 +439,8 @@ mod tests {
 
     #[test]
     fn unescaped() {
-        let mut u = Url::default();
-        let s = Url::from_str("/foo?query=http://bad").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("/foo?query=http://bad").unwrap();
         u.path = Some("/foo".to_owned());
         u.query = Some("query=http://bad".to_owned());
         assert_eq!(s, u);
@@ -455,16 +448,16 @@ mod tests {
 
     #[test]
     fn leading() {
-        let mut u = Url::default();
-        let s = Url::from_str("//foo").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("//foo").unwrap();
         u.host = "foo".to_owned();
         assert_eq!(s, u);
     }
 
     #[test]
     fn leading2() {
-        let mut u = Url::default();
-        let s = Url::from_str("user@foo/path?a=b").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("user@foo/path?a=b").unwrap();
         u.userinfo = Some(UserInfo {
             username: "user".to_owned(),
             password: String::new(),
@@ -477,24 +470,24 @@ mod tests {
 
     #[test]
     fn same_codepath() {
-        let mut u = Url::default();
-        let s = Url::from_str("/threeslashes").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("/threeslashes").unwrap();
         u.path = Some("/threeslashes".to_owned());
         assert_eq!(s, u);
     }
 
     // #[test]
     // fn relative_path() {
-    // 	let mut u = Url::default();
-    // 	let s = Url::from_str("a/b/c").unwrap();
+    // 	let mut u = Uri::default();
+    // 	let s = Uri::from_str("a/b/c").unwrap();
     // 	u.path = Some("a/b/c".to_owned());
     // 	assert_eq!(s, u);
     // }
 
     #[test]
     fn escaped() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://%3Fam:pa%3Fsword@google.com").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://%3Fam:pa%3Fsword@google.com").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.userinfo = Some(UserInfo {
             username: "%3Fam".to_owned(),
@@ -508,8 +501,8 @@ mod tests {
 
     #[test]
     fn host_subcomponent() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://192.168.0.1/").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://192.168.0.1/").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "192.168.0.1".to_owned();
         u.path = Some("/".to_owned());
@@ -518,8 +511,8 @@ mod tests {
 
     #[test]
     fn host_and_port_subcomponents() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://192.168.0.1:8080/").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://192.168.0.1:8080/").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "192.168.0.1".to_owned();
         u.port = Some(8080);
@@ -529,8 +522,8 @@ mod tests {
 
     #[test]
     fn host_subcomponent2() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://[fe80::1]/").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://[fe80::1]/").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "[fe80::1]".to_owned();
         u.path = Some("/".to_owned());
@@ -539,8 +532,8 @@ mod tests {
 
     #[test]
     fn host_and_port_subcomponents2() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://[fe80::1]:8080/").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://[fe80::1]:8080/").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "[fe80::1]".to_owned();
         u.port = Some(8080);
@@ -550,8 +543,8 @@ mod tests {
 
     // #[test]
     // fn host_subcomponent3() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("http://[fe80::1%25en0]/").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("http://[fe80::1%25en0]/").unwrap();
     //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en0]";
     //     u.path = Some("/".to_owned());
@@ -560,8 +553,8 @@ mod tests {
 
     // #[test]
     // fn host_and_port_subcomponents3() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("http://[fe80::1%25en0]:8080/").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("http://[fe80::1%25en0]:8080/").unwrap();
     //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en0]";
     //     u.port = Some("8080");
@@ -571,8 +564,8 @@ mod tests {
 
     // #[test]
     // fn host_subcomponent4() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("http:[fe80::1%25%65%6e%301-._~]/").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("http:[fe80::1%25%65%6e%301-._~]/").unwrap();
     //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en01-._~]";
     //     u.path = Some("/".to_owned());
@@ -581,8 +574,8 @@ mod tests {
 
     // #[test]
     // fn host_and_port_subcomponents4() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("http:[fe80::1%25%65%6e%301-._~]:8080/").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("http:[fe80::1%25%65%6e%301-._~]:8080/").unwrap();
     //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "[fe80::1%en01-._~]";
     //     u.port = Some("8080");
@@ -592,8 +585,8 @@ mod tests {
 
     #[test]
     fn alternate_escapings_of_path_survive_round_trip() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://rest.rsc.io/foo%2fbar/baz%2Fquux?alt=media").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://rest.rsc.io/foo%2fbar/baz%2Fquux?alt=media").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "rest.rsc.io".to_owned();
         u.path = Some("/foo%2fbar/baz%2Fquux".to_owned());
@@ -604,8 +597,8 @@ mod tests {
 
     #[test]
     fn issue_12036() {
-        let mut u = Url::default();
-        let s = Url::from_str("mysql://a,b,c/bar").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("mysql://a,b,c/bar").unwrap();
         u.scheme = Some(Scheme::Other("mysql".to_owned()));
         u.host = "a,b,c".to_owned();
         u.path = Some("/bar".to_owned());
@@ -614,8 +607,8 @@ mod tests {
 
     #[test]
     fn worst_case_host() {
-        let mut u = Url::default();
-        let s = Url::from_str("scheme://!$&'()*+,;=hello!:23/path").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("scheme://!$&'()*+,;=hello!:23/path").unwrap();
         u.scheme = Some(Scheme::Other("scheme".to_owned()));
         u.host = "!$&'()*+,;=hello!".to_owned();
         u.port = Some(23);
@@ -625,8 +618,8 @@ mod tests {
 
     // #[test]
     // fn worst_case_path() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("http://host/!$&'()*+,;=:@[hello]").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("http://host/!$&'()*+,;=:@[hello]").unwrap();
     //     u.scheme = Some(Scheme::HTTP);
     //     u.host = "host".to_owned();
     //     u.path = Some("/!$&'()*+,;=:@[hello]".to_owned());
@@ -636,8 +629,8 @@ mod tests {
 
     #[test]
     fn example() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://example.com/oid/[order_id]").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://example.com/oid/[order_id]").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "example.com".to_owned();
         u.path = Some("/oid/[order_id]".to_owned());
@@ -647,8 +640,8 @@ mod tests {
 
     #[test]
     fn example2() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://192.168.0.2:8080/foo").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://192.168.0.2:8080/foo").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "192.168.0.2".to_owned();
         u.port = Some(8080);
@@ -656,26 +649,26 @@ mod tests {
         assert_eq!(s, u);
     }
 
-    //      let mut u = Url::default();
-    //      let s = Url::from_str("http://192.168.0.2:/foo").unwrap();
+    //      let mut u = Uri::default();
+    //      let s = Uri::from_str("http://192.168.0.2:/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "192.168.0.2:";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
     // }
 
-    //      let mut u = Url::default();
+    //      let mut u = Uri::default();
     //      	 Malformed IPv6 but still accepted.
-    //      let s = Url::from_str("http://2b01:e34:ef40:7730:8e70:5aff:fefe:edac:8080/foo").unwrap();
+    //      let s = Uri::from_str("http://2b01:e34:ef40:7730:8e70:5aff:fefe:edac:8080/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "2b01:e34:ef40:7730:8e70:5aff:fefe:edac:8080";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
     // }
 
-    //      let mut u = Url::default();
+    //      let mut u = Uri::default();
     //      	 Malformed IPv6 but still accepted.
-    //      let s = Url::from_str("http://2b01:e34:ef40:7730:8e70:5aff:fefe:edac:/foo").unwrap();
+    //      let s = Uri::from_str("http://2b01:e34:ef40:7730:8e70:5aff:fefe:edac:/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "2b01:e34:ef40:7730:8e70:5aff:fefe:edac:";
     //      		u.path = Some("/foo");
@@ -684,16 +677,16 @@ mod tests {
 
     // #[test]
     // fn ipv6_2() {
-    //      let mut u = Url::default();
-    //      let s = Url::from_str("http:[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:8080/foo").unwrap();
+    //      let mut u = Uri::default();
+    //      let s = Uri::from_str("http:[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:8080/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:8080".to_owned();
     //      		u.path = Some("/foo".to_owned());
     //      assert_eq!(s, u);
     // }
 
-    //      let mut u = Url::default();
-    //      let s = Url::from_str("http:[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:/foo").unwrap();
+    //      let mut u = Uri::default();
+    //      let s = Uri::from_str("http:[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "[2b01:e34:ef40:7730:8e70:5aff:fefe:edac]:";
     //      		u.path = Some("/foo");
@@ -702,25 +695,25 @@ mod tests {
 
     #[test]
     fn example3() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://hello.世界.com/foo").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://hello.世界.com/foo").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "hello.世界.com".to_owned();
         u.path = Some("/foo".to_owned());
         assert_eq!(s, u);
     }
 
-    //      let mut u = Url::default();
-    //      let s = Url::from_str("http://hello.%e4%b8%96%e7%95%8c.com/foo").unwrap();
+    //      let mut u = Uri::default();
+    //      let s = Uri::from_str("http://hello.%e4%b8%96%e7%95%8c.com/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "hello.世界.com";
     //      		u.path = Some("/foo");
     //      assert_eq!(s, u);
-    //      let s = Url::from_str("http://hello.%E4%B8%96%E7%95%8C.com/foo").unwrap();
+    //      let s = Uri::from_str("http://hello.%E4%B8%96%E7%95%8C.com/foo").unwrap();
     //      }
 
-    //      let mut u = Url::default();
-    //      let s = Url::from_str("http://hello.%E4%B8%96%E7%95%8C.com/foo").unwrap();
+    //      let mut u = Uri::default();
+    //      let s = Uri::from_str("http://hello.%E4%B8%96%E7%95%8C.com/foo").unwrap();
     //      		u.scheme = Some(Scheme::HTTP);
     //      		u.host = "hello.世界.com";
     //      		u.path = Some("/foo");
@@ -729,8 +722,8 @@ mod tests {
 
     #[test]
     fn example4() {
-        let mut u = Url::default();
-        let s = Url::from_str("http://example.com//foo").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("http://example.com//foo").unwrap();
         u.scheme = Some(Scheme::HTTP);
         u.host = "example.com".to_owned();
         u.path = Some("//foo".to_owned());
@@ -739,8 +732,8 @@ mod tests {
 
     #[test]
     fn test_that_we_can_reparse_the_host_names_we_accept() {
-        let mut u = Url::default();
-        let s = Url::from_str("myscheme://authority<\"hi\">/foo").unwrap();
+        let mut u = Uri::default();
+        let s = Uri::from_str("myscheme://authority<\"hi\">/foo").unwrap();
         u.scheme = Some(Scheme::Other("myscheme".to_owned()));
         u.host = "authority<\"hi\">".to_owned();
         u.path = Some("/foo".to_owned());
@@ -749,8 +742,8 @@ mod tests {
 
     // #[test]
     // fn example5() {
-    //     let mut u = Url::default();
-    //     let s = Url::from_str("tcp:[2020::2020:20:2020:2020%25Windows%20Loves%20Spaces]:2020").unwrap();
+    //     let mut u = Uri::default();
+    //     let s = Uri::from_str("tcp:[2020::2020:20:2020:2020%25Windows%20Loves%20Spaces]:2020").unwrap();
     //     u.scheme = Some("tcp");
     //     u.host = "[2020::2020:20:2020:2020%Windows Loves Spaces]:2020";
     //     assert_eq!(s, u);

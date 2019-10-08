@@ -1,6 +1,6 @@
 use failure::Fail;
 
-// use crate::url::Url;
+// use crate::uri::Uri;
 
 pub type Result<T> = std::result::Result<T, Error>;
 

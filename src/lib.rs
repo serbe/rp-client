@@ -1,11 +1,11 @@
-pub mod error;
-pub mod proxy;
 pub mod addr;
-pub mod scheme;
-pub mod url;
-pub mod userinfo;
-pub mod request;
+pub mod error;
 pub mod method;
+pub mod proxy;
+pub mod request;
+pub mod scheme;
+pub mod uri;
+pub mod userinfo;
 pub mod version;
 
 // #[cfg(test)]

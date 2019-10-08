@@ -2,7 +2,7 @@ use std::net::{SocketAddrV4, SocketAddrV6};
 use std::str::FromStr;
 
 use crate::error::{Error, Result};
-use crate::url::Url;
+use crate::uri::Uri;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Addr {
@@ -32,7 +32,7 @@ impl FromStr for Addr {
         } else if let Ok(ipv6) = s.parse::<SocketAddrV6>() {
             Ok(Addr::Ipv6(ipv6))
         } else {
-            match s.parse::<Url>() {
+            match s.parse::<Uri>() {
                 Ok(_) => Ok(Addr::Domain(s.to_owned())),
                 Err(e) => Err(e),
             }
