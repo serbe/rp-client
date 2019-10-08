@@ -6,6 +6,9 @@ use crate::error::{Error, Result};
 use crate::scheme::Scheme;
 use crate::userinfo::UserInfo;
 
+
+// https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=e19f3d313ad22db7363658b96fd2b390
+
 // pub trait IntoUrl {
 //     fn into_url(self) -> Result<Url>;
 // }
