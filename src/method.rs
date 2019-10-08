@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use bytes::Bytes;
+use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
@@ -14,6 +14,34 @@ pub enum Method {
     Trace,
     Connect,
     Patch,
+}
+
+pub trait IntoMethod {
+    fn into_method(self) -> Result<Method>;
+}
+
+impl IntoMethod for Method {
+    fn into_method(self) -> Result<Method> {
+        Ok(self)
+    }
+}
+
+impl<'a> IntoMethod for &'a str {
+    fn into_method(self) -> Result<Method> {
+        self.parse()
+    }
+}
+
+impl<'a> IntoMethod for &'a String {
+    fn into_method(self) -> Result<Method> {
+        Method::from_str(&self)
+    }
+}
+
+impl<'a> IntoMethod for Bytes {
+    fn into_method(self) -> Result<Method> {
+        Method::from_bytes(self)
+    }
 }
 
 impl Method {
@@ -42,7 +70,9 @@ impl Method {
             b"TRACE" => Ok(Method::Trace),
             b"CONNECT" => Ok(Method::Connect),
             b"PATCH" => Ok(Method::Patch),
-            _ => Err(Error::UnknownMethod(String::from_utf8_lossy(&b[..]).to_string()))
+            _ => Err(Error::UnknownMethod(
+                String::from_utf8_lossy(&b[..]).to_string(),
+            )),
         }
     }
 }
@@ -67,7 +97,7 @@ impl FromStr for Method {
             "TRACE" => Ok(Method::Trace),
             "CONNECT" => Ok(Method::Connect),
             "PATCH" => Ok(Method::Patch),
-            _ => Err(Error::UnknownMethod(s.to_owned()))
+            _ => Err(Error::UnknownMethod(s.to_owned())),
         }
     }
 }
