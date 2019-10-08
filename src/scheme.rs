@@ -3,6 +3,12 @@ use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
+// pub trait SchemeTryFrom<T> {
+//     type Error: Into<Error>;
+
+//     fn try_from(t: T) -> Result<Self>;
+// }
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Scheme {
     HTTP,
@@ -14,6 +20,18 @@ pub enum Scheme {
 
 pub trait IntoScheme {
     fn into_scheme(self) -> Result<Scheme>;
+}
+
+impl<'a> IntoScheme for &'a str {
+    fn into_scheme(self) -> Result<Scheme> {
+        self.parse()
+    }
+}
+
+impl<'a> IntoScheme for String {
+    fn into_scheme(self) -> Result<Scheme> {
+        Scheme::from_str(&self)
+    }
 }
 
 impl Scheme {
@@ -62,18 +80,6 @@ impl Scheme {
 //         Scheme::HTTP
 //     }
 // }
-
-impl<'a> IntoScheme for &'a str {
-    fn into_scheme(self) -> Result<Scheme> {
-        Scheme::from_str(self)
-    }
-}
-
-impl<'a> IntoScheme for String {
-    fn into_scheme(self) -> Result<Scheme> {
-        Scheme::from_str(&self)
-    }
-}
 
 impl FromStr for Scheme {
     type Err = Error;
