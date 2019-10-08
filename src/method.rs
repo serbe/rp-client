@@ -32,9 +32,9 @@ impl<'a> IntoMethod for &'a str {
     }
 }
 
-impl<'a> IntoMethod for &'a String {
+impl IntoMethod for String {
     fn into_method(self) -> Result<Method> {
-        Method::from_str(&self)
+        self.parse()
     }
 }
 

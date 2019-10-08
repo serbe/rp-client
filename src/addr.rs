@@ -11,6 +11,28 @@ pub enum Addr {
     Domain(String),
 }
 
+pub trait IntoAddr {
+    fn into_addr(self) -> Result<Addr>;
+}
+
+impl IntoAddr for Addr {
+    fn into_addr(self) -> Result<Addr> {
+        Ok(self)
+    }
+}
+
+impl<'a> IntoAddr for &'a str {
+    fn into_addr(self) -> Result<Addr> {
+        self.parse()
+    }
+}
+
+impl IntoAddr for String {
+    fn into_addr(self) -> Result<Addr> {
+        self.parse()
+    }
+}
+
 impl Into<Addr> for &str {
     fn into(self) -> Addr {
         if let Ok(ipv4) = self.parse::<SocketAddrV4>() {

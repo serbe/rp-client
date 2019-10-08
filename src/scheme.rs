@@ -22,15 +22,21 @@ pub trait IntoScheme {
     fn into_scheme(self) -> Result<Scheme>;
 }
 
+impl IntoScheme for Scheme {
+    fn into_scheme(self) -> Result<Scheme> {
+        Ok(self)
+    }
+}
+
 impl<'a> IntoScheme for &'a str {
     fn into_scheme(self) -> Result<Scheme> {
         self.parse()
     }
 }
 
-impl<'a> IntoScheme for String {
+impl IntoScheme for String {
     fn into_scheme(self) -> Result<Scheme> {
-        Scheme::from_str(&self)
+        self.parse()
     }
 }
 

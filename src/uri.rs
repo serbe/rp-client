@@ -18,13 +18,13 @@ impl IntoUri for Uri {
 
 impl<'a> IntoUri for &'a str {
     fn into_uri(self) -> Result<Uri> {
-        self.parse::<Uri>()?.into_uri()
+        self.parse()
     }
 }
 
-impl<'a> IntoUri for &'a String {
+impl IntoUri for String {
     fn into_uri(self) -> Result<Uri> {
-        self.parse::<Uri>()?.into_uri()
+        self.parse()
     }
 }
 

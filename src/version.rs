@@ -14,6 +14,12 @@ pub trait IntoVersion {
     fn into_version(self) -> Result<Version>;
 }
 
+impl IntoVersion for Version {
+    fn into_version(self) -> Result<Version> {
+        Ok(self)
+    }
+}
+
 impl<'a> IntoVersion for &'a str {
     fn into_version(self) -> Result<Version> {
         self.parse()
@@ -22,7 +28,7 @@ impl<'a> IntoVersion for &'a str {
 
 impl<'a> IntoVersion for String {
     fn into_version(self) -> Result<Version> {
-        Version::from_str(&self)
+        self.parse()
     }
 }
 
