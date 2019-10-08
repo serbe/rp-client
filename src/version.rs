@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::fmt;
+use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
@@ -8,6 +8,22 @@ pub enum Version {
     Http09,
     Http10,
     Http11,
+}
+
+pub trait IntoVersion {
+    fn into_version(self) -> Result<Version>;
+}
+
+impl<'a> IntoVersion for &'a str {
+    fn into_version(self) -> Result<Version> {
+        self.parse()
+    }
+}
+
+impl<'a> IntoVersion for String {
+    fn into_version(self) -> Result<Version> {
+        Version::from_str(&self)
+    }
 }
 
 impl Default for Version {
