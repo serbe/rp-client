@@ -54,8 +54,8 @@ impl FromStr for Addr {
         } else if let Ok(ipv6) = s.parse::<SocketAddrV6>() {
             Ok(Addr::Ipv6(ipv6))
         } else {
-            match s.parse::<Uri>() {
-                Ok(_) => Ok(Addr::Domain(s.to_owned())),
+            match s.parse::<Uri>()?.domain() {
+                Ok(domain) => Ok(Addr::Domain(domain)),
                 Err(e) => Err(e),
             }
         }

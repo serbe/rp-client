@@ -28,12 +28,6 @@ impl IntoUri for String {
     }
 }
 
-// impl<'a> IntoUri for Uri {
-//     fn into_uri(self) -> Result<Uri> {
-//         Uri::new(self).into_uri()
-//     }
-// }
-
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Uri {
     pub scheme: Option<Scheme>,
@@ -116,6 +110,16 @@ impl Uri {
             Some(unescape(&userinfo.password))
         } else {
             None
+        }
+    }
+
+    pub fn domain(&self) -> Result<String> {
+        match &self.scheme {
+            Some(Scheme::HTTP)
+            | Some(Scheme::HTTPS)
+            | Some(Scheme::SOCKS5)
+            | Some(Scheme::SOCKS5H) => Ok(self.origin()),
+            _ => Err(Error::UnsupportedProxyScheme),
         }
     }
 
@@ -207,40 +211,6 @@ impl FromStr for Uri {
         })
     }
 }
-
-// impl<'a> TryFrom<&'a str> for Uri {
-//     type Error = Error;
-
-//     fn try_from(uri: &'a str) -> Result<Uri> {
-//         Uri::into_uri(uri.parse::<Uri>()?)
-//     }
-// }
-
-// impl TryFrom<String> for Uri {
-//     type Error = Error;
-
-//     fn try_from(uri: String) -> Result<Uri> {
-//         Uri::into_uri(uri.parse::<Uri>()?)
-//     }
-// }
-
-// impl FromStr for Uri {
-//     type Err = Error;
-
-//     fn from_str(s: &str) -> Result<Self> {
-//         Uri::into_uri(s.parse::<Uri>()?)
-//     }
-// }
-
-// pub(crate) fn expect_uri(uri: &Uri) -> Uri {
-//     uri.as_str()
-//         .parse()
-//         .expect("a parsed Uri should always be a valid Uri")
-// }
-
-// pub(crate) fn try_uri(uri: &Uri) -> Option<::hyper::Uri> {
-//     uri.as_str().parse().ok()
-// }
 
 fn from_split(split: Vec<&str>) -> (&str, Option<String>) {
     if split.len() == 2 {
