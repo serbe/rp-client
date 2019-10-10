@@ -1,9 +1,7 @@
-use std::error;
-use std::fmt;
-use std::io;
+use std::{error, fmt, io, result};
 // use failure::Fail;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = result::Result<T, Error>;
 
 // #[derive(Debug, Fail)]
 // pub enum Error {
@@ -53,11 +51,11 @@ pub enum Error {
     Io(io::Error),
     NoneString,
     ParseFragment(&'static str),
-    ParseHost(String),
+    ParseHost,
     ParseIPv6(String),
-    ParsePort(String),
+    ParsePort,
     ParseQuery(&'static str),
-    ParseScheme(&'static str),
+    ParseScheme,
     ParseUserInfo(&'static str),
     UnknownMethod(String),
     UnsupportedProxyScheme,
@@ -74,11 +72,11 @@ impl fmt::Display for Error {
             Io(e) => write!(w, "{}", e),
             NoneString => write!(w, "none string"),
             ParseFragment(e) => write!(w, "parse fragmeng {}", e),
-            ParseHost(e) => write!(w, "parse host {}", e),
+            ParseHost => write!(w, "parse host"),
             ParseIPv6(e) => write!(w, "parse ip version 6 {}", e),
-            ParsePort(e) => write!(w, "parse port {}", e),
+            ParsePort => write!(w, "parse port"),
             ParseQuery(e) => write!(w, "parse query {}", e),
-            ParseScheme(e) => write!(w, "parse scheme {}", e),
+            ParseScheme => write!(w, "parse scheme"),
             ParseUserInfo(e) => write!(w, "parse user info {}", e),
             UnknownMethod(e) => write!(w, "unknown method {}", e),
             UnsupportedProxyScheme => write!(w, "unsupported proxy scheme"),
@@ -97,11 +95,11 @@ impl error::Error for Error {
             Io(e) => e.description(),
             NoneString => "none string",
             ParseFragment(_) => "parse fragmeng",
-            ParseHost(_) => "parse host",
+            ParseHost => "parse host",
             ParseIPv6(_) => "parse ip version 6",
-            ParsePort(_) => "parse port",
+            ParsePort => "parse port",
             ParseQuery(_) => "parse query",
-            ParseScheme(_) => "parse scheme",
+            ParseScheme => "parse scheme",
             ParseUserInfo(_) => "parse user info",
             UnknownMethod(_) => "unknown method",
             UnsupportedProxyScheme => "unsupported proxy scheme",
@@ -118,11 +116,11 @@ impl error::Error for Error {
             Io(e) => e.source(),
             NoneString => None,
             ParseFragment(_) => None,
-            ParseHost(_) => None,
+            ParseHost => None,
             ParseIPv6(_) => None,
-            ParsePort(_) => None,
+            ParsePort => None,
             ParseQuery(_) => None,
-            ParseScheme(_) => None,
+            ParseScheme => None,
             ParseUserInfo(_) => None,
             UnknownMethod(_) => None,
             UnsupportedProxyScheme => None,
@@ -138,22 +136,20 @@ impl From<io::Error> for Error {
     }
 }
 
-
-    // Io{source: std::io::Error} = "IO Error: {:?}",
-    // UnknownMethod{method: String} = "Unknown method {method}",
-    // UnsupportedVersion{version: String} = "Unsupported version {version}",
-    // EmptyScheme = "Uri no have scheme",
-    // UnsupportedProxyScheme = "Unsupported proxy scheme",
-    // UnsupportedScheme{scheme: String} = "Unsupported scheme {scheme}",
-    // NoneString = "None string",
-    // ParseFragment{fragmeng: String} = "Parse fragmeng {fragmeng}",
-    // ParseQuery{query: String} = "Parse query {query}",
-    // ParseScheme{scheme: String} = "Parse scheme {scheme}",
-    // ParseUserInfo{userinfo:String} = "Parse user info {userinfo}",
-    // ParseHost{host:String} = "Parse host {host}",
-    // ParseIPv6{ipv6: String} = "Parse ip version 6 {ipv6}",
-    // ParsePort{port:String} = "Parse port {port}",
-
+// Io{source: std::io::Error} = "IO Error: {:?}",
+// UnknownMethod{method: String} = "Unknown method {method}",
+// UnsupportedVersion{version: String} = "Unsupported version {version}",
+// EmptyScheme = "Uri no have scheme",
+// UnsupportedProxyScheme = "Unsupported proxy scheme",
+// UnsupportedScheme{scheme: String} = "Unsupported scheme {scheme}",
+// NoneString = "None string",
+// ParseFragment{fragmeng: String} = "Parse fragmeng {fragmeng}",
+// ParseQuery{query: String} = "Parse query {query}",
+// ParseScheme{scheme: String} = "Parse scheme {scheme}",
+// ParseUserInfo{userinfo:String} = "Parse user info {userinfo}",
+// ParseHost{host:String} = "Parse host {host}",
+// ParseIPv6{ipv6: String} = "Parse ip version 6 {ipv6}",
+// ParsePort{port:String} = "Parse port {port}",
 
 // #[fail(display = "Uri {} no have port", _0)]
 // NoPort(http::Uri),
