@@ -4,7 +4,7 @@ use std::str::FromStr;
 // use http::{HeaderValue, Uri};
 
 use crate::error::{Error, Result};
-use crate::scheme::Scheme;
+// use crate::scheme::Scheme;
 use crate::uri::Uri;
 use crate::userinfo::UserInfo;
 
@@ -173,11 +173,11 @@ impl FromStr for ProxyScheme {
 
     fn from_str(s: &str) -> Result<Self> {
         let uri = s.parse::<Uri>()?;
-        match uri.scheme {
-            Some(Scheme::HTTP) | Some(Scheme::HTTPS) => Self::http(uri),
-            Some(Scheme::SOCKS5) => Self::socks5(uri.socket_addr()?),
-            Some(Scheme::SOCKS5H) => Self::socks5h(uri.socket_addr()?),
-            Some(Scheme::Other(scheme)) => Err(Error::UnsupportedScheme(scheme)),
+        match uri.scheme() {
+            Some("http") | Some("https") => Self::http(uri.clone()),
+            Some("socks5") => Self::socks5(uri.socket_addr()?),
+            Some("socks5h") => Self::socks5h(uri.socket_addr()?),
+            Some(s) => Err(Error::UnsupportedScheme(s)),
             None => Err(Error::EmptyScheme),
         }
 

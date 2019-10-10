@@ -59,7 +59,7 @@ pub enum Error {
     ParseUserInfo(&'static str),
     UnknownMethod(String),
     UnsupportedProxyScheme,
-    UnsupportedScheme(String),
+    UnsupportedScheme(&'static str),
     UnsupportedVersion(String),
 }
 

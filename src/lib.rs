@@ -1,12 +1,12 @@
-// pub mod addr;
+pub mod addr;
 pub mod error;
-// pub mod method;
-// pub mod proxy;
+pub mod method;
+pub mod proxy;
 // pub mod request;
-pub mod scheme;
+// pub mod scheme;
 pub mod uri;
 pub mod userinfo;
-// pub mod version;
+pub mod version;
 
 // #[cfg(test)]
 // #[macro_use]

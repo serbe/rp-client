@@ -1,6 +1,7 @@
 use crate::error::{Error, Result};
 use std::{
     fmt,
+    net::{SocketAddr, ToSocketAddrs},
     ops::{Index, Range},
     str,
     string::ToString,
@@ -70,9 +71,10 @@ impl Uri {
 
     pub fn host_header(&self) -> Option<String> {
         match self.host() {
-            Some(h) => match self.corr_port() {
-                HTTP_PORT | HTTPS_PORT => Some(h.to_string()),
-                p => Some(format!("{}:{}", h, p)),
+            Some(h) => match self.default_port() {
+                Some(p) if p == 80 || p == 8080 => Some(h.to_string()),
+                Some(p) => Some(format!("{}:{}", h, p)),
+                None => None,
             },
             _ => None,
         }
@@ -85,14 +87,17 @@ impl Uri {
         }
     }
 
-    pub fn corr_port(&self) -> u16 {
+    pub fn default_port(&self) -> Option<u16> {
         let default_port = match self.scheme() {
-            Some("https") => HTTPS_PORT,
-            _ => HTTP_PORT,
+            Some("https") => Some(443),
+            _ => None,
         };
 
         match self.authority {
-            Some(ref a) => a.port().unwrap_or(default_port),
+            Some(ref a) => match a.port() {
+                Some(port) => Some(port),
+                None => default_port,
+            },
             None => default_port,
         }
     }
@@ -120,6 +125,36 @@ impl Uri {
         }
 
         result
+    }
+
+    pub fn domain(&self) -> Result<String> {
+        match &self.scheme() {
+            Some("http") | Some("https") | Some("socks5") | Some("socks5h") => Ok(self.origin()),
+            _ => Err(Error::UnsupportedProxyScheme),
+        }
+    }
+
+    pub fn origin(&self) -> String {
+        match &self.scheme() {
+            Some(scheme) => format!("{}://{}", scheme, self.host_port()),
+            None => self.host_port(),
+        }
+    }
+
+    // remove unwrap
+    pub fn host_port(&self) -> String {
+        match self.default_port() {
+            Some(port) => format!("{}:{}", self.host().unwrap(), port),
+            None => self.host().unwrap().to_owned(),
+        }
+    }
+
+    fn socket_addrs(&self) -> Result<Vec<SocketAddr>> {
+        Ok(self.host_port().to_socket_addrs()?.collect())
+    }
+
+    pub fn socket_addr(&self) -> Result<SocketAddr> {
+        Ok(self.socket_addrs()?[0])
     }
 }
 
