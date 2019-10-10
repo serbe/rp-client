@@ -251,8 +251,12 @@ impl str::FromStr for Uri {
         let (uri_part, fragment) = get_chunks(&s, Some(RangeC::new(0, s.len())), "#", true);
         let (uri_part, query) = get_chunks(&s, uri_part, "?", true);
 
-        let (scheme, mut uri_part) = get_chunks(&s, uri_part, ":", true);
-        let scheme = scheme.ok_or(Error::ParseScheme)?;
+        let (scheme, maybe_part) = get_chunks(&s, uri_part, ":", true);
+        let (scheme, uri_part) = if let Some(scheme) = get_scheme(&s, scheme) {
+            (scheme, maybe_part)
+        } else {
+            (RangeC::new(0, 0), uri_part)
+        };
 
         let mut authority = None;
 
@@ -525,6 +529,38 @@ fn get_chunks<'a>(
         }
     } else {
         (None, None)
+    }
+}
+
+fn get_scheme<'a>(
+    s: &mut String,
+    range: Option<RangeC>,
+) -> Option<RangeC> {
+    if let Some(r) = range {
+        let range = Range::from(r);
+
+        if s[range].chars().all(|c| c.is_alphanumeric()) {
+            s.replacen(s[range], s[range].to_lowercase(), 1);
+                    Ok(Scheme::Other(s.to_lowercase()))
+                }
+        match s[range.clone()].find(separator) {
+            Some(i) => {
+                let mid = r.start + i + separator.len();
+                let before = Some(RangeC::new(r.start, mid - 1)).filter(|r| r.start != r.end);
+                let after = Some(RangeC::new(mid - c, r.end)).filter(|r| r.start != r.end);
+
+                (before, after)
+            }
+            None => {
+                if !s[range].is_empty() {
+                    (Some(r), None)
+                } else {
+                    (None, None)
+                }
+            }
+        }
+    } else {
+        None
     }
 }
 
