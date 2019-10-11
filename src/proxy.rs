@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use crate::error::{Error, Result};
 // use crate::scheme::Scheme;
-use crate::uri::Uri;
+use url::Url;
 use crate::userinfo::UserInfo;
 
 pub trait IntoProxyScheme {
@@ -115,7 +115,7 @@ impl Proxy {
 #[derive(Clone, Debug)]
 pub enum ProxyScheme {
     Http {
-        uri: Uri,
+        url: Url,
     },
     Socks5 {
         addr: SocketAddr,
@@ -125,8 +125,8 @@ pub enum ProxyScheme {
 }
 
 impl ProxyScheme {
-    fn http(uri: Uri) -> Result<Self> {
-        Ok(ProxyScheme::Http { uri })
+    fn http(url: Url) -> Result<Self> {
+        Ok(ProxyScheme::Http { url })
     }
 
     fn socks5(addr: SocketAddr) -> Result<Self> {
@@ -172,13 +172,12 @@ impl FromStr for ProxyScheme {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let uri = s.parse::<Uri>()?;
-        match uri.scheme() {
-            Some("http") | Some("https") => Self::http(uri.clone()),
-            Some("socks5") => Self::socks5(uri.socket_addr()?),
-            Some("socks5h") => Self::socks5h(uri.socket_addr()?),
-            Some(s) => Err(Error::UnsupportedScheme(s)),
-            None => Err(Error::EmptyScheme),
+        let url = s.parse::<Url>()?;
+        match url.scheme() {
+            "http" | "https" => Self::http(url.clone()),
+            "socks5" => Self::socks5(url.socket_addrs(|| None)?[0]),
+            "socks5h" => Self::socks5h(url.socket_addrs(|| None)?[0]),
+            _ => Err(Error::UnsupportedScheme(s.to_string())),
         }
 
         // if let Some(pwd) = uri.password() {

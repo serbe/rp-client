@@ -1,14 +1,11 @@
-use crate::error::{Error, Result};
-use std::{
-    fmt,
-    net::{SocketAddr, ToSocketAddrs},
-    ops::{Index, Range},
-    str,
-    string::ToString,
-};
+use std::fmt;
+use std::net::{SocketAddr, ToSocketAddrs};
+use std::ops::{Index, Range};
+use std::str;
+use std::string::ToString;
 
-const HTTP_PORT: u16 = 80;
-const HTTPS_PORT: u16 = 443;
+use crate::error::{Error, Result};
+// use crate::proxy::ProxyScheme;
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq)]
 pub struct RangeC {
@@ -51,6 +48,10 @@ pub struct Uri {
 }
 
 impl Uri {
+    pub fn as_str(&self) -> &str {
+        &self.inner
+    }
+
     pub fn scheme(&self) -> Option<&str> {
         self.scheme.map(|r| &self.inner[r])
     }
@@ -425,6 +426,18 @@ fn get_chunks<'a>(
 #[cfg(test)]
 mod tests {
     use crate::uri::Uri;
+
+    #[test]
+    fn case_scheme() {
+        let uri = "hTtP://www.example.org".parse::<Uri>().unwrap();
+        assert_eq!(uri.scheme(), Some("http"));
+    }
+
+    #[test]
+    fn case_uri() {
+        let uri = "hTtP://www.example.org".parse::<Uri>().unwrap();
+        assert_eq!(uri.as_str(), "http://www.example.org");
+    }
 
     #[test]
     fn no_path() {

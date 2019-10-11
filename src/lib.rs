@@ -2,9 +2,9 @@ pub mod addr;
 pub mod error;
 pub mod method;
 pub mod proxy;
-// pub mod request;
+pub mod request;
 // pub mod scheme;
-pub mod uri;
+// pub mod uri;
 pub mod userinfo;
 pub mod version;
 

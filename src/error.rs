@@ -49,6 +49,7 @@ pub type Result<T> = result::Result<T, Error>;
 pub enum Error {
     EmptyScheme,
     Io(io::Error),
+    ParseUrl(url::ParseError),
     NoneString,
     ParseFragment(&'static str),
     ParseHost,
@@ -59,7 +60,7 @@ pub enum Error {
     ParseUserInfo(&'static str),
     UnknownMethod(String),
     UnsupportedProxyScheme,
-    UnsupportedScheme(&'static str),
+    UnsupportedScheme(String),
     UnsupportedVersion(String),
 }
 
@@ -70,6 +71,7 @@ impl fmt::Display for Error {
         match self {
             EmptyScheme => write!(w, "Uri no have scheme"),
             Io(e) => write!(w, "{}", e),
+            ParseUrl(e) => write!(w, "{}", e),
             NoneString => write!(w, "none string"),
             ParseFragment(e) => write!(w, "parse fragmeng {}", e),
             ParseHost => write!(w, "parse host"),
@@ -93,6 +95,7 @@ impl error::Error for Error {
         match self {
             EmptyScheme => "Uri no have scheme",
             Io(e) => e.description(),
+            ParseUrl(e) => e.description(),
             NoneString => "none string",
             ParseFragment(_) => "parse fragmeng",
             ParseHost => "parse host",
@@ -114,6 +117,7 @@ impl error::Error for Error {
         match self {
             EmptyScheme => None,
             Io(e) => e.source(),
+            ParseUrl(e) => e.source(),
             NoneString => None,
             ParseFragment(_) => None,
             ParseHost => None,
@@ -133,6 +137,12 @@ impl error::Error for Error {
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
         Error::Io(err)
+    }
+}
+
+impl From<url::ParseError> for Error {
+    fn from(err: url::ParseError) -> Error {
+        Error::ParseUrl(err)
     }
 }
 
