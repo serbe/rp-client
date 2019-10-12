@@ -1,4 +1,4 @@
-use std::{error, fmt, io, result};
+use std::{error, fmt, io, result, net};
 // use failure::Fail;
 
 pub type Result<T> = result::Result<T, Error>;
@@ -48,12 +48,14 @@ pub type Result<T> = result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     EmptyScheme,
+    EmptyAuthority,
     Io(io::Error),
-    ParseUrl(url::ParseError),
+    StdParseAddr(net::AddrParseError),
     NoneString,
     ParseFragment(&'static str),
     ParseHost,
-    ParseIPv6(String),
+    ParseAddr,
+    ParseIPv6,
     ParsePort,
     ParseQuery(&'static str),
     ParseScheme,
@@ -70,12 +72,14 @@ impl fmt::Display for Error {
 
         match self {
             EmptyScheme => write!(w, "Uri no have scheme"),
+            EmptyAuthority => write!(w, "Uri no have authority"),
             Io(e) => write!(w, "{}", e),
-            ParseUrl(e) => write!(w, "{}", e),
+            StdParseAddr(e) => write!(w, "{}", e),
             NoneString => write!(w, "none string"),
             ParseFragment(e) => write!(w, "parse fragmeng {}", e),
             ParseHost => write!(w, "parse host"),
-            ParseIPv6(e) => write!(w, "parse ip version 6 {}", e),
+            ParseAddr => write!(w, "parse addr"),
+            ParseIPv6 => write!(w, "parse ip version 6"),
             ParsePort => write!(w, "parse port"),
             ParseQuery(e) => write!(w, "parse query {}", e),
             ParseScheme => write!(w, "parse scheme"),
@@ -94,12 +98,15 @@ impl error::Error for Error {
 
         match self {
             EmptyScheme => "Uri no have scheme",
+            EmptyAuthority => "Uri no have authority",
             Io(e) => e.description(),
-            ParseUrl(e) => e.description(),
+            StdParseAddr(e) => e.description(),
+            // ParseUrl(e) => e.description(),
             NoneString => "none string",
             ParseFragment(_) => "parse fragmeng",
             ParseHost => "parse host",
-            ParseIPv6(_) => "parse ip version 6",
+            ParseAddr => "parse addr",
+            ParseIPv6 => "parse ip version 6",
             ParsePort => "parse port",
             ParseQuery(_) => "parse query",
             ParseScheme => "parse scheme",
@@ -116,12 +123,15 @@ impl error::Error for Error {
 
         match self {
             EmptyScheme => None,
+            EmptyAuthority => None,
             Io(e) => e.source(),
-            ParseUrl(e) => e.source(),
+            StdParseAddr(e) => e.source(),
+            // ParseUrl(e) => e.source(),
             NoneString => None,
             ParseFragment(_) => None,
             ParseHost => None,
-            ParseIPv6(_) => None,
+            ParseAddr => None,
+            ParseIPv6 => None,
             ParsePort => None,
             ParseQuery(_) => None,
             ParseScheme => None,
@@ -140,11 +150,17 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<url::ParseError> for Error {
-    fn from(err: url::ParseError) -> Error {
-        Error::ParseUrl(err)
+impl From<net::AddrParseError> for Error {
+    fn from(err: net::AddrParseError) -> Error {
+        Error::StdParseAddr(err)
     }
 }
+
+// impl From<url::ParseError> for Error {
+//     fn from(err: url::ParseError) -> Error {
+//         Error::ParseUrl(err)
+//     }
+// }
 
 // Io{source: std::io::Error} = "IO Error: {:?}",
 // UnknownMethod{method: String} = "Unknown method {method}",

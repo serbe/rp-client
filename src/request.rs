@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
 use bytes::Bytes;
-use url::Url;
 
+use crate::uri::Uri;
 use crate::error::Error; // , Result};
-use crate::method::{IntoMethod, Method};
+use crate::method::{Method};
 use crate::version::{IntoVersion, Version};
 
 #[derive(Debug)]
 pub struct Builder<'a> {
-    pub url: Url,
+    pub uri: Uri,
     pub method: Method,
     pub version: Version,
     pub headers: HashMap<Bytes, Bytes>,
@@ -18,9 +18,9 @@ pub struct Builder<'a> {
 }
 
 impl<'a> Builder<'a> {
-    pub fn new(url: Url) -> Builder<'a> {
+    pub fn new(uri: Uri) -> Builder<'a> {
         Builder {
-            url,
+            uri,
             headers: HashMap::new(),
             method: Method::Get,
             version: Version::Http11,
@@ -65,9 +65,9 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn uri(&mut self, url: &str) -> &mut Self {
-        match url.parse::<Url>() {
-            Ok(url) => self.url = url,
+    pub fn uri(&mut self, uri: &str) -> &mut Self {
+        match uri.parse::<Uri>() {
+            Ok(uri) => self.uri = uri,
             Err(e) => self.err = Some(e.into()),
         }
         self

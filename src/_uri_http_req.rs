@@ -182,7 +182,7 @@ impl fmt::Display for Uri {
     }
 }
 
-impl str::FromStr for Uri {
+impl FromStr for Uri {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
@@ -237,7 +237,7 @@ impl str::FromStr for Uri {
     }
 }
 
-// impl str::FromStr for Uri {
+// impl FromStr for Uri {
 //     type Err = Error;
 
 //     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -320,7 +320,7 @@ impl Authority {
     }
 }
 
-impl str::FromStr for Authority {
+impl FromStr for Authority {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {

@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use crate::error::{Error, Result};
 // use crate::scheme::Scheme;
-use url::Url;
+use crate::uri::Uri;
 use crate::userinfo::UserInfo;
 
 pub trait IntoProxyScheme {
@@ -115,7 +115,7 @@ impl Proxy {
 #[derive(Clone, Debug)]
 pub enum ProxyScheme {
     Http {
-        url: Url,
+        uri: Uri,
     },
     Socks5 {
         addr: SocketAddr,
@@ -125,8 +125,8 @@ pub enum ProxyScheme {
 }
 
 impl ProxyScheme {
-    fn http(url: Url) -> Result<Self> {
-        Ok(ProxyScheme::Http { url })
+    fn http(uri: Uri) -> Result<Self> {
+        Ok(ProxyScheme::Http { uri })
     }
 
     fn socks5(addr: SocketAddr) -> Result<Self> {
@@ -168,25 +168,25 @@ impl ProxyScheme {
     // }
 }
 
-impl FromStr for ProxyScheme {
-    type Err = Error;
+// impl FromStr for ProxyScheme {
+//     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Self> {
-        let url = s.parse::<Url>()?;
-        match url.scheme() {
-            "http" | "https" => Self::http(url.clone()),
-            "socks5" => Self::socks5(url.socket_addrs(|| None)?[0]),
-            "socks5h" => Self::socks5h(url.socket_addrs(|| None)?[0]),
-            _ => Err(Error::UnsupportedScheme(s.to_string())),
-        }
+//     fn from_str(s: &str) -> Result<Self> {
+//         let uri = s.parse::<Uri>()?;
+//         match uri.scheme() {
+//             "http" | "https" => Self::http(uri.clone()),
+//             "socks5" => Self::socks5(uri.socket_addrs(|| None)?[0]),
+//             "socks5h" => Self::socks5h(uri.socket_addrs(|| None)?[0]),
+//             _ => Err(Error::UnsupportedScheme(s.to_string())),
+//         }
 
-        // if let Some(pwd) = uri.password() {
-        //     let decoded_username = percent_decode(uri.username().as_bytes()).decode_utf8_lossy();
-        //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
-        //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
-        // }
-    }
-}
+//         // if let Some(pwd) = uri.password() {
+//         //     let decoded_username = percent_decode(uri.username().as_bytes()).decode_utf8_lossy();
+//         //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
+//         //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
+//         // }
+//     }
+// }
 
 // impl Intercept {
 // fn set_basic_auth(&mut self, username: &str, password: &str) {
