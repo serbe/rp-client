@@ -1,9 +1,10 @@
-// pub mod addr;
+pub mod addr;
+pub mod authority;
 pub mod error;
 pub mod method;
 pub mod proxy;
+pub mod range;
 pub mod request;
-// pub mod scheme;
 pub mod uri;
 pub mod userinfo;
 pub mod version;
