@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use crate::error::{Error, Result};
 // use crate::scheme::Scheme;
-use crate::uri::Uri;
+use crate::uri::{IntoUri, Uri};
 use crate::userinfo::UserInfo;
 
 pub trait IntoProxyScheme {
@@ -18,6 +18,12 @@ pub trait IntoProxyScheme {
 //     }
 // }
 
+impl IntoProxyScheme for Uri {
+    fn into_proxy_scheme(self) -> Result<ProxyScheme> {
+        ProxyScheme::parse(self)
+    }
+}
+
 impl IntoProxyScheme for ProxyScheme {
     fn into_proxy_scheme(self) -> Result<ProxyScheme> {
         Ok(self)
@@ -26,27 +32,31 @@ impl IntoProxyScheme for ProxyScheme {
 
 #[derive(Clone, Debug)]
 pub enum Proxy {
-    All(ProxyScheme),
     Http(ProxyScheme),
     Https(ProxyScheme),
     Socks(ProxyScheme),
 }
 
 impl Proxy {
-    pub fn http<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::Http(proxy_scheme.into_proxy_scheme()?))
+    pub fn http(uri: Uri) -> Result<Proxy> {
+        Ok(Proxy::Http(uri.into_proxy_scheme()?))
     }
 
-    pub fn https<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::Https(proxy_scheme.into_proxy_scheme()?))
+    pub fn https(uri: Uri) -> Result<Proxy> {
+        Ok(Proxy::Https(uri.into_proxy_scheme()?))
     }
 
-    pub fn all<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::All(proxy_scheme.into_proxy_scheme()?))
+    pub fn socks(uri: Uri) -> Result<Proxy> {
+        Ok(Proxy::Socks(uri.into_proxy_scheme()?))
     }
 
-    pub fn socks<U: IntoProxyScheme>(proxy_scheme: U) -> Result<Proxy> {
-        Ok(Proxy::Socks(proxy_scheme.into_proxy_scheme()?))
+    pub fn parse(uri: Uri) -> Result<Proxy> {
+        match uri.scheme() {
+            "http" => Self::http(uri),
+            "https" => Self::https(uri),
+            "socks5" | "socks5h" => Self::socks(uri),
+            s => Err(Error::UnsupportedScheme(s.to_string())),
+        }
     }
 
     // fn new(intercept: Intercept) -> Proxy {
@@ -143,6 +153,15 @@ impl ProxyScheme {
             auth: None,
             remote_dns: true,
         })
+    }
+
+    fn parse(uri: Uri) -> Result<Self> {
+        match uri.scheme() {
+            "http" | "https" => Self::http(uri.clone()),
+            "socks5" => Self::socks5(uri.socket_addr()?),
+            "socks5h" => Self::socks5h(uri.socket_addr()?),
+            s => Err(Error::UnsupportedScheme(s.to_string())),
+        }
     }
 
     // fn with_basic_auth<T: Into<String>, U: Into<String>>(

@@ -1,19 +1,19 @@
-use bytes::Bytes;
+// use bytes::Bytes;
 use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Method {
-    Options,
-    Get,
-    Post,
-    Put,
-    Delete,
-    Head,
-    Trace,
-    Connect,
-    Patch,
+    OPTIONS,
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    HEAD,
+    TRACE,
+    CONNECT,
+    PATCH,
 }
 
 pub trait IntoMethod {
@@ -38,48 +38,48 @@ impl IntoMethod for String {
     }
 }
 
-impl<'a> IntoMethod for Bytes {
-    fn into_method(self) -> Result<Method> {
-        Method::from_bytes(self)
-    }
-}
+// impl<'a> IntoMethod for Bytes {
+//     fn into_method(self) -> Result<Method> {
+//         Method::from_bytes(self)
+//     }
+// }
 
 impl Method {
     pub fn as_str(&self) -> &str {
         match self {
-            Method::Options => "OPTIONS",
-            Method::Get => "GET",
-            Method::Post => "POST",
-            Method::Put => "PUT",
-            Method::Delete => "DELETE",
-            Method::Head => "HEAD",
-            Method::Trace => "TRACE",
-            Method::Connect => "CONNECT",
-            Method::Patch => "PATCH",
+            Method::OPTIONS => "OPTIONS",
+            Method::GET => "GET",
+            Method::POST => "POST",
+            Method::PUT => "PUT",
+            Method::DELETE => "DELETE",
+            Method::HEAD => "HEAD",
+            Method::TRACE => "TRACE",
+            Method::CONNECT => "CONNECT",
+            Method::PATCH => "PATCH",
         }
     }
 
-    pub fn from_bytes(b: Bytes) -> Result<Self> {
-        match &b[..] {
-            b"OPTIONS" => Ok(Method::Options),
-            b"GET" => Ok(Method::Get),
-            b"POST" => Ok(Method::Post),
-            b"PUT" => Ok(Method::Put),
-            b"DELETE" => Ok(Method::Delete),
-            b"HEAD" => Ok(Method::Head),
-            b"TRACE" => Ok(Method::Trace),
-            b"CONNECT" => Ok(Method::Connect),
-            b"PATCH" => Ok(Method::Patch),
-            _ => Err(Error::UnknownMethod(
-                String::from_utf8_lossy(&b[..]).to_string(),
-            )),
-        }
-    }
+    // pub fn from_bytes(b: Bytes) -> Result<Self> {
+    //     match &b[..] {
+    //         b"OPTIONS" => Ok(Method::OPTIONS),
+    //         b"GET" => Ok(Method::GET),
+    //         b"POST" => Ok(Method::POST),
+    //         b"PUT" => Ok(Method::PUT),
+    //         b"DELETE" => Ok(Method::DELETE),
+    //         b"HEAD" => Ok(Method::HEAD),
+    //         b"TRACE" => Ok(Method::TRACE),
+    //         b"CONNECT" => Ok(Method::CONNECT),
+    //         b"PATCH" => Ok(Method::PATCH),
+    //         _ => Err(Error::UnknownMethod(
+    //             String::from_utf8_lossy(&b[..]).to_string(),
+    //         )),
+    //     }
+    // }
 }
 
 impl Default for Method {
     fn default() -> Self {
-        Method::Get
+        Method::GET
     }
 }
 
@@ -88,15 +88,15 @@ impl FromStr for Method {
 
     fn from_str(s: &str) -> Result<Self> {
         match s.to_ascii_uppercase().as_str() {
-            "OPTIONS" => Ok(Method::Options),
-            "GET" => Ok(Method::Get),
-            "POST" => Ok(Method::Post),
-            "PUT" => Ok(Method::Put),
-            "DELETE" => Ok(Method::Delete),
-            "HEAD" => Ok(Method::Head),
-            "TRACE" => Ok(Method::Trace),
-            "CONNECT" => Ok(Method::Connect),
-            "PATCH" => Ok(Method::Patch),
+            "OPTIONS" => Ok(Method::OPTIONS),
+            "GET" => Ok(Method::GET),
+            "POST" => Ok(Method::POST),
+            "PUT" => Ok(Method::PUT),
+            "DELETE" => Ok(Method::DELETE),
+            "HEAD" => Ok(Method::HEAD),
+            "TRACE" => Ok(Method::TRACE),
+            "CONNECT" => Ok(Method::CONNECT),
+            "PATCH" => Ok(Method::PATCH),
             _ => Err(Error::UnknownMethod(s.to_owned())),
         }
     }

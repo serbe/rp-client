@@ -50,11 +50,13 @@ pub enum Error {
     EmptyScheme,
     EmptyAuthority,
     Io(io::Error),
+    // Fmt(fmt::Error),
     StdParseAddr(net::AddrParseError),
     NoneString,
     ParseFragment(&'static str),
     ParseHost,
     ParseAddr,
+    ParseHeaders,
     ParseIPv6,
     ParsePort,
     ParseQuery(&'static str),
@@ -74,11 +76,13 @@ impl fmt::Display for Error {
             EmptyScheme => write!(w, "Uri no have scheme"),
             EmptyAuthority => write!(w, "Uri no have authority"),
             Io(e) => write!(w, "{}", e),
+            // Fmt(e) => write!(w, "{}", e),
             StdParseAddr(e) => write!(w, "{}", e),
             NoneString => write!(w, "none string"),
             ParseFragment(e) => write!(w, "parse fragmeng {}", e),
             ParseHost => write!(w, "parse host"),
             ParseAddr => write!(w, "parse addr"),
+            ParseHeaders => write!(w, "parse headers"),
             ParseIPv6 => write!(w, "parse ip version 6"),
             ParsePort => write!(w, "parse port"),
             ParseQuery(e) => write!(w, "parse query {}", e),
@@ -100,12 +104,14 @@ impl error::Error for Error {
             EmptyScheme => "Uri no have scheme",
             EmptyAuthority => "Uri no have authority",
             Io(e) => e.description(),
+            // Fmt(e) => e.description(),
             StdParseAddr(e) => e.description(),
             // ParseUrl(e) => e.description(),
             NoneString => "none string",
             ParseFragment(_) => "parse fragmeng",
             ParseHost => "parse host",
             ParseAddr => "parse addr",
+            ParseHeaders => "parse headers",
             ParseIPv6 => "parse ip version 6",
             ParsePort => "parse port",
             ParseQuery(_) => "parse query",
@@ -125,12 +131,14 @@ impl error::Error for Error {
             EmptyScheme => None,
             EmptyAuthority => None,
             Io(e) => e.source(),
+            // Fmt(e) => e.source(),
             StdParseAddr(e) => e.source(),
             // ParseUrl(e) => e.source(),
             NoneString => None,
             ParseFragment(_) => None,
             ParseHost => None,
             ParseAddr => None,
+            ParseHeaders => None,
             ParseIPv6 => None,
             ParsePort => None,
             ParseQuery(_) => None,
@@ -149,6 +157,12 @@ impl From<io::Error> for Error {
         Error::Io(err)
     }
 }
+
+// impl From<fmt::Error> for Error {
+//     fn from(err: fmt::Error) -> Error {
+//         Error::Fmt(err)
+//     }
+// }
 
 impl From<net::AddrParseError> for Error {
     fn from(err: net::AddrParseError) -> Error {

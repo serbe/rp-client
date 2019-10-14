@@ -10,6 +10,28 @@ use crate::authority::Authority;
 use crate::error::{Error, Result};
 use crate::range::{get_chunks, RangeUsize};
 
+pub trait IntoUri {
+    fn into_uri(self) -> Result<Uri>;
+}
+
+impl IntoUri for Uri {
+    fn into_uri(self) -> Result<Uri> {
+        Ok(self)
+    }
+}
+
+impl<'a> IntoUri for &'a str {
+    fn into_uri(self) -> Result<Uri> {
+        self.parse()
+    }
+}
+
+impl IntoUri for String {
+    fn into_uri(self) -> Result<Uri> {
+        self.parse()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Uri {
     inner: String,
