@@ -1,9 +1,9 @@
 use std::collections::{hash_map, HashMap};
-use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use std::fmt::{Formatter, Display};
 
-use crate::error::{Error, Result};
 use crate::uri::Uri;
+use crate::error::{Error, Result};
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Headers(HashMap<String, String>);

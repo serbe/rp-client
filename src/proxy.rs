@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use crate::error::{Error, Result};
 // use crate::scheme::Scheme;
-use crate::uri::{IntoUri, Uri};
+use crate::uri::Uri;
 use crate::userinfo::UserInfo;
 
 pub trait IntoProxyScheme {

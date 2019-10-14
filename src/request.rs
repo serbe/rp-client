@@ -7,7 +7,7 @@ use bytes::Bytes;
 use crate::builder::RequestBuilder;
 use crate::headers::Headers;
 use crate::method::Method;
-use crate::uri::{IntoUri, Uri};
+use crate::uri::Uri;
 
 #[derive(Clone, Debug)]
 pub struct Request {

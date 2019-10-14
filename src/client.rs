@@ -1,9 +1,9 @@
 // use crate::builder::{RequestBuilder};
-use crate::uri::{IntoUri};
+use crate::error::Result;
+use crate::method::Method;
 use crate::request::Request;
 use crate::transport::Transport;
-use crate::method::Method;
-use crate::error::Result;
+use crate::uri::IntoUri;
 
 // #[derive(Clone)]
 pub struct Client {
@@ -14,39 +14,39 @@ pub struct Client {
 
 impl Client {
     pub fn new<U: IntoUri>(uri: U) -> Self {
-        Client{
+        Client {
             transport: Transport::new(),
             request: Request::new(uri.into_uri().expect("bad uri")),
         }
     }
 
     pub fn get(&mut self) -> &mut Self {
-        &self.request.method(Method::GET);
+        self.request.method(Method::GET);
         self
     }
 
     pub fn post(&mut self) -> &mut Self {
-        &self.request.method(Method::POST);
+        self.request.method(Method::POST);
         self
     }
 
     pub fn put(&mut self) -> &mut Self {
-        &self.request.method(Method::PUT);
+        self.request.method(Method::PUT);
         self
     }
 
     pub fn patch(&mut self) -> &mut Self {
-        &self.request.method(Method::PATCH);
+        self.request.method(Method::PATCH);
         self
     }
 
     pub fn delete(&mut self) -> &mut Self {
-        &self.request.method(Method::DELETE);
+        self.request.method(Method::DELETE);
         self
     }
 
     pub fn head(&mut self) -> &mut Self {
-        &self.request.method(Method::HEAD);
+        self.request.method(Method::HEAD);
         self
     }
 
@@ -71,13 +71,13 @@ impl Client {
     }
 }
 
-    // pub fn request<U: IntoUri>(&self, method: Method) -> RequestBuilder {
-    //     let req = url
-    //         .into_uri()
-    //         .map(move |url| Request::new(method, url));
-    //     RequestBuilder::new(self.clone(), req)
-    // }
+// pub fn request<U: IntoUri>(&self, method: Method) -> RequestBuilder {
+//     let req = url
+//         .into_uri()
+//         .map(move |url| Request::new(method, url));
+//     RequestBuilder::new(self.clone(), req)
+// }
 
-    // pub fn execute(&self, request: Request) -> ::Result<Response> {
-    //     self.inner.execute_request(request)
-    // }
+// pub fn execute(&self, request: Request) -> ::Result<Response> {
+//     self.inner.execute_request(request)
+// }
