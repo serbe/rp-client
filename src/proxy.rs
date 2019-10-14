@@ -168,25 +168,25 @@ impl ProxyScheme {
     // }
 }
 
-// impl FromStr for ProxyScheme {
-//     type Err = Error;
+impl FromStr for ProxyScheme {
+    type Err = Error;
 
-//     fn from_str(s: &str) -> Result<Self> {
-//         let uri = s.parse::<Uri>()?;
-//         match uri.scheme() {
-//             "http" | "https" => Self::http(uri.clone()),
-//             "socks5" => Self::socks5(uri.socket_addrs(|| None)?[0]),
-//             "socks5h" => Self::socks5h(uri.socket_addrs(|| None)?[0]),
-//             _ => Err(Error::UnsupportedScheme(s.to_string())),
-//         }
+    fn from_str(s: &str) -> Result<Self> {
+        let uri = s.parse::<Uri>()?;
+        match uri.scheme() {
+            "http" | "https" => Self::http(uri.clone()),
+            "socks5" => Self::socks5(uri.socket_addr()?),
+            "socks5h" => Self::socks5h(uri.socket_addr()?),
+            _ => Err(Error::UnsupportedScheme(s.to_string())),
+        }
 
-//         // if let Some(pwd) = uri.password() {
-//         //     let decoded_username = percent_decode(uri.username().as_bytes()).decode_utf8_lossy();
-//         //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
-//         //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
-//         // }
-//     }
-// }
+        // if let Some(pwd) = uri.password() {
+        //     let decoded_username = percent_decode(uri.username().as_bytes()).decode_utf8_lossy();
+        //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
+        //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
+        // }
+    }
+}
 
 // impl Intercept {
 // fn set_basic_auth(&mut self, username: &str, password: &str) {
@@ -209,41 +209,4 @@ impl ProxyScheme {
 //         .expect("base64 is always valid HeaderValue");
 //     header.set_sensitive(true);
 //     header
-// }
-
-// pub(crate) trait Addr {
-//     fn scheme(&self) -> &str;
-//     fn host(&self) -> &str;
-//     fn port(&self) -> Option<u16>;
-// }
-
-// impl Addr for Uri {
-//     fn scheme(&self) -> &str {
-//         &uri::scheme(self).unwrap_or("".to_string())
-//     }
-
-//     fn host(&self) -> &str {
-//         uri::host(self)
-//     }
-
-//     fn port(&self) -> Option<u16> {
-//         uri::port(self)
-//     }
-// }
-
-// impl Addr for Uri {
-//     fn scheme(&self) -> &str {
-//         self.scheme_part()
-//             .expect("Uri should have a scheme")
-//             .as_str()
-//     }
-
-//     fn host(&self) -> &str {
-//         Uri::host(self)
-//             .expect("<Uri as Dst>::host should have a str")
-//     }
-
-//     fn port(&self) -> Option<u16> {
-//         self.port_part().map(|p| p.as_u16())
-//     }
 // }

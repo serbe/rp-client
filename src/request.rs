@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use bytes::Bytes;
 
-use crate::uri::Uri;
 use crate::error::Error; // , Result};
-use crate::method::{Method};
+use crate::method::Method;
+use crate::uri::Uri;
 use crate::version::{IntoVersion, Version};
 
 #[derive(Debug)]

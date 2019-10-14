@@ -1,4 +1,4 @@
-use std::{error, fmt, io, result, net};
+use std::{error, fmt, io, net, result};
 // use failure::Fail;
 
 pub type Result<T> = result::Result<T, Error>;
