@@ -5,7 +5,7 @@ use crate::request::Request;
 use crate::transport::Transport;
 use crate::uri::IntoUri;
 
-// #[derive(Clone)]
+#[derive(Debug)]
 pub struct Client {
     // uri: Uri,
     transport: Transport,
@@ -13,11 +13,11 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new<U: IntoUri>(uri: U) -> Self {
-        Client {
+    pub fn new<U: IntoUri>(uri: U) -> Result<Self> {
+        Ok(Client {
             transport: Transport::new(),
-            request: Request::new(uri.into_uri().expect("bad uri")),
-        }
+            request: Request::new(uri.into_uri()?),
+        })
     }
 
     pub fn get(&mut self) -> &mut Self {

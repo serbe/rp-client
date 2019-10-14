@@ -4,6 +4,7 @@ use crate::error::Result;
 use crate::proxy::Proxy;
 use crate::uri::Uri;
 
+#[derive(Debug)]
 pub struct Transport {
     proxy: Option<Proxy>,
     stream: Option<TcpStream>,
