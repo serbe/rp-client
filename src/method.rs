@@ -1,5 +1,6 @@
 // use bytes::Bytes;
 use std::str::FromStr;
+use std::fmt;
 
 use crate::error::{Error, Result};
 
@@ -99,5 +100,23 @@ impl FromStr for Method {
             "PATCH" => Ok(Method::PATCH),
             _ => Err(Error::UnknownMethod(s.to_owned())),
         }
+    }
+}
+
+impl fmt::Display for Method {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let method = match self {
+            Method::GET => "GET",
+            Method::HEAD => "HEAD",
+            Method::POST => "POST",
+            Method::PUT => "PUT",
+            Method::DELETE => "DELETE",
+            Method::OPTIONS => "OPTIONS",
+            Method::PATCH => "PATCH",
+            Method::TRACE => "TRACE",
+            Method::CONNECT => "CONNECT",
+        };
+
+        write!(f, "{}", method)
     }
 }
