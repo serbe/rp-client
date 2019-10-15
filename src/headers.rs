@@ -38,6 +38,7 @@ impl Headers {
 
         headers.insert("Host", &uri.host_header());
         // headers.insert("Referer", &uri);
+        headers.insert("Connection", "Close");
 
         headers
     }

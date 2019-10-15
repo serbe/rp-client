@@ -3,16 +3,18 @@ use std::net::TcpStream;
 use crate::error::Result;
 use crate::proxy::Proxy;
 use crate::uri::Uri;
+use crate::stream::Stream;
 
 #[derive(Debug)]
-pub struct Transport {
-    proxy: Option<Proxy>,
-    stream: Option<TcpStream>,
+pub enum Transport {
+    Proxy(Proxy),
+    Stream(Stream),
+    None,
 }
 
 impl Default for Transport {
     fn default() -> Self {
-        Transport{proxy: None, stream: None}
+        Transport::None
     }
 }
 
@@ -21,31 +23,19 @@ impl Transport {
         Transport::default()
     }
 
-    pub fn proxy(uri: Uri) -> Result<Self> {
-        Ok(Transport {
-            proxy: Some(Proxy::parse(uri)?),
-            stream: None,
-        })
+    pub fn proxy(uri: &Uri) -> Result<Self> {
+        Ok(Transport::Proxy(Proxy::parse(uri)?))
     }
 
-    pub fn proxy_http(uri: Uri) -> Result<Self> {
-        Ok(Transport {
-            proxy: Some(Proxy::http(uri)?),
-            stream: None,
-        })
+    pub fn proxy_http(uri: &Uri) -> Result<Self> {
+        Ok(Transport::Proxy(Proxy::http(uri)?))
     }
 
-    pub fn proxy_https(uri: Uri) -> Result<Self> {
-        Ok(Transport {
-            proxy: Some(Proxy::https(uri)?),
-            stream: None,
-        })
+    pub fn proxy_https(uri: &Uri) -> Result<Self> {
+        Ok(Transport::Proxy(Proxy::https(uri)?))
     }
 
-    pub fn proxy_socks(uri: Uri) -> Result<Self> {
-        Ok(Transport {
-            proxy: Some(Proxy::socks(uri)?),
-            stream: None,
-        })
+    pub fn proxy_socks(uri: &Uri) -> Result<Self> {
+        Ok(Transport::Proxy(Proxy::socks(uri)?))
     }
 }

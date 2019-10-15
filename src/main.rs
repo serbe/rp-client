@@ -1,8 +1,7 @@
-use crate::client::Client;
+// use crate::client::Client;
 
 pub mod addr;
 pub mod authority;
-pub mod builder;
 pub mod client;
 pub mod error;
 pub mod headers;
@@ -14,9 +13,13 @@ pub mod transport;
 pub mod uri;
 pub mod userinfo;
 pub mod version;
+// pub mod http;
+pub mod stream;
 
 fn main() {
-    let mut client = Client::new("http://ya.ru").unwrap();
-    client.proxy("socks5h://127.0.0.1:3128");
-    println!("{:?}", client);
+    // let mut client = Client::new("http://api.ipify.org").unwrap();
+    // // client.proxy("http://127.0.0.1:5858").unwrap();
+    // let body = client.build();
+    // println!("client: {:?}", client);
+    // println!("body: {:?}", body);
 }

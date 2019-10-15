@@ -50,7 +50,7 @@ pub enum Error {
     EmptyScheme,
     EmptyAuthority,
     Io(io::Error),
-    // Fmt(fmt::Error),
+    HandshakeError(native_tls::HandshakeError<std::net::TcpStream>),
     StdParseAddr(net::AddrParseError),
     NoneString,
     ParseFragment(&'static str),
@@ -62,10 +62,12 @@ pub enum Error {
     ParseQuery(&'static str),
     ParseScheme,
     ParseUserInfo(&'static str),
+    NativeTls(native_tls::Error),
     UnknownMethod(String),
     UnsupportedProxyScheme,
     UnsupportedScheme(String),
     UnsupportedVersion(String),
+    WrongHttp,
 }
 
 impl fmt::Display for Error {
@@ -76,7 +78,7 @@ impl fmt::Display for Error {
             EmptyScheme => write!(w, "Uri no have scheme"),
             EmptyAuthority => write!(w, "Uri no have authority"),
             Io(e) => write!(w, "{}", e),
-            // Fmt(e) => write!(w, "{}", e),
+            HandshakeError(e) => write!(w, "{}", e),
             StdParseAddr(e) => write!(w, "{}", e),
             NoneString => write!(w, "none string"),
             ParseFragment(e) => write!(w, "parse fragmeng {}", e),
@@ -88,10 +90,12 @@ impl fmt::Display for Error {
             ParseQuery(e) => write!(w, "parse query {}", e),
             ParseScheme => write!(w, "parse scheme"),
             ParseUserInfo(e) => write!(w, "parse user info {}", e),
+            NativeTls(e) => write!(w, "{}", e),
             UnknownMethod(e) => write!(w, "unknown method {}", e),
             UnsupportedProxyScheme => write!(w, "unsupported proxy scheme"),
             UnsupportedScheme(e) => write!(w, "unsupported scheme {}", e),
             UnsupportedVersion(e) => write!(w, "unsupported version {}", e),
+            WrongHttp => write!(w, "wrong http"),
         }
     }
 }
@@ -104,9 +108,8 @@ impl error::Error for Error {
             EmptyScheme => "Uri no have scheme",
             EmptyAuthority => "Uri no have authority",
             Io(e) => e.description(),
-            // Fmt(e) => e.description(),
+            HandshakeError(e) => e.description(),
             StdParseAddr(e) => e.description(),
-            // ParseUrl(e) => e.description(),
             NoneString => "none string",
             ParseFragment(_) => "parse fragmeng",
             ParseHost => "parse host",
@@ -117,10 +120,12 @@ impl error::Error for Error {
             ParseQuery(_) => "parse query",
             ParseScheme => "parse scheme",
             ParseUserInfo(_) => "parse user info",
+            NativeTls(e) => e.description(),
             UnknownMethod(_) => "unknown method",
             UnsupportedProxyScheme => "unsupported proxy scheme",
             UnsupportedScheme(_) => "unsupported scheme",
             UnsupportedVersion(_) => "unsupported version",
+            WrongHttp => "wrong http",
         }
     }
 
@@ -131,9 +136,8 @@ impl error::Error for Error {
             EmptyScheme => None,
             EmptyAuthority => None,
             Io(e) => e.source(),
-            // Fmt(e) => e.source(),
+            HandshakeError(e) => e.source(),
             StdParseAddr(e) => e.source(),
-            // ParseUrl(e) => e.source(),
             NoneString => None,
             ParseFragment(_) => None,
             ParseHost => None,
@@ -144,10 +148,12 @@ impl error::Error for Error {
             ParseQuery(_) => None,
             ParseScheme => None,
             ParseUserInfo(_) => None,
+            NativeTls(e) => e.source(),
             UnknownMethod(_) => None,
             UnsupportedProxyScheme => None,
             UnsupportedScheme(_) => None,
             UnsupportedVersion(_) => None,
+            WrongHttp => None,
         }
     }
 }
@@ -176,6 +182,17 @@ impl From<net::AddrParseError> for Error {
 //     }
 // }
 
+impl From<native_tls::Error> for Error {
+    fn from(err: native_tls::Error) -> Error {
+        Error::NativeTls(err)
+    }
+}
+
+impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
+    fn from(err: native_tls::HandshakeError<std::net::TcpStream>) -> Error {
+        Error::HandshakeError(err)
+    }
+}
 // Io{source: std::io::Error} = "IO Error: {:?}",
 // UnknownMethod{method: String} = "Unknown method {method}",
 // UnsupportedVersion{version: String} = "Unsupported version {version}",

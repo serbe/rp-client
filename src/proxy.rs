@@ -38,19 +38,19 @@ pub enum Proxy {
 }
 
 impl Proxy {
-    pub fn http(uri: Uri) -> Result<Proxy> {
-        Ok(Proxy::Http(uri.into_proxy_scheme()?))
+    pub fn http(uri: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Http(uri.clone().into_proxy_scheme()?))
     }
 
-    pub fn https(uri: Uri) -> Result<Proxy> {
-        Ok(Proxy::Https(uri.into_proxy_scheme()?))
+    pub fn https(uri: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Https(uri.clone().into_proxy_scheme()?))
     }
 
-    pub fn socks(uri: Uri) -> Result<Proxy> {
-        Ok(Proxy::Socks(uri.into_proxy_scheme()?))
+    pub fn socks(uri: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Socks(uri.clone().into_proxy_scheme()?))
     }
 
-    pub fn parse(uri: Uri) -> Result<Proxy> {
+    pub fn parse(uri: &Uri) -> Result<Proxy> {
         match uri.scheme() {
             "http" => Self::http(uri),
             "https" => Self::https(uri),

@@ -2,33 +2,34 @@ use std::net::{TcpStream, ToSocketAddrs};
 // use std::io::Write;
 use std::time::Duration;
 
-use bytes::Bytes;
-
-use crate::builder::RequestBuilder;
 use crate::headers::Headers;
 use crate::method::Method;
 use crate::uri::Uri;
+use crate::version::Version;
 
 #[derive(Clone, Debug)]
 pub struct Request {
-    inner: RequestBuilder,
-    connect_timeout: Option<Duration>,
-    read_timeout: Option<Duration>,
-    write_timeout: Option<Duration>,
+    uri: Uri,
+    headers: Headers,
+    method: Method,
+    version: Version,
+    body: Option<Vec<u8>>,
+    // is_http_proxy: bool,
+    // connect_timeout: Option<Duration>,
+    // read_timeout: Option<Duration>,
+    // write_timeout: Option<Duration>,
     // root_cert_file_pem: Option<&'a Path>,
 }
 
 impl Request {
-    pub fn new(uri: Uri) -> Request {
-        let mut builder = RequestBuilder::new(uri);
-        builder.header("Connection", "Close");
-
+    pub fn new(uri: &Uri) -> Request {
         Request {
-            inner: builder,
-            connect_timeout: Some(Duration::from_secs(60)),
-            read_timeout: Some(Duration::from_secs(60)),
-            write_timeout: Some(Duration::from_secs(60)),
-            // root_cert_file_pem: None,
+            headers: Headers::default_http(&uri),
+            uri: uri.clone(),
+            method: Method::GET,
+            version: Version::Http11,
+            body: None,
+            // is_http_proxy: false,
         }
     }
 
@@ -36,8 +37,7 @@ impl Request {
     where
         Headers: From<T>,
     {
-        self.inner.headers(headers);
-
+        self.headers = Headers::from(headers);
         self
     }
 
@@ -46,7 +46,7 @@ impl Request {
         T: ToString + ?Sized,
         U: ToString + ?Sized,
     {
-        self.inner.header(key, val);
+        self.headers.insert(key, val);
         self
     }
 
@@ -54,38 +54,61 @@ impl Request {
     where
         Method: From<T>,
     {
-        self.inner.method(method);
+        self.method = Method::from(method);
         self
     }
 
-    pub fn body(&mut self, body: Bytes) -> &mut Self {
-        self.inner.body(body);
-
+    pub fn body(&mut self, body: Vec<u8>) -> &mut Self {
+        self.body = Some(body);
         self
     }
 
-    pub fn connect_timeout<T>(&mut self, timeout: Option<T>) -> &mut Self
-    where
-        Duration: From<T>,
-    {
-        self.connect_timeout = timeout.map(Duration::from);
-        self
-    }
+    // pub fn connect_timeout<T>(&mut self, timeout: Option<T>) -> &mut Self
+    // where
+    //     Duration: From<T>,
+    // {
+    //     self.connect_timeout = timeout.map(Duration::from);
+    //     self
+    // }
 
-    pub fn read_timeout<T>(&mut self, timeout: Option<T>) -> &mut Self
-    where
-        Duration: From<T>,
-    {
-        self.read_timeout = timeout.map(Duration::from);
-        self
-    }
+    // pub fn read_timeout<T>(&mut self, timeout: Option<T>) -> &mut Self
+    // where
+    //     Duration: From<T>,
+    // {
+    //     self.read_timeout = timeout.map(Duration::from);
+    //     self
+    // }
 
-    pub fn write_timeout<T>(&mut self, timeout: Option<T>) -> &mut Self
-    where
-        Duration: From<T>,
-    {
-        self.write_timeout = timeout.map(Duration::from);
-        self
+    // pub fn write_timeout<T>(&mut self, timeout: Option<T>) -> &mut Self
+    // where
+    //     Duration: From<T>,
+    // {
+    //     self.write_timeout = timeout.map(Duration::from);
+    //     self
+    // }
+
+    pub fn msg(&self) -> Vec<u8> {
+        let request_line = format!(
+            "{} {} {}{}",
+            self.method,
+            self.uri.resource(),
+            self.version,
+            "\r\n"
+        );
+
+        let headers: String = self
+            .headers
+            .iter()
+            .map(|(k, v)| format!("{}: {}{}", k, v, "\r\n"))
+            .collect();
+
+        let mut request_msg = (request_line + &headers + "\r\n").as_bytes().to_vec();
+
+        if let Some(b) = &self.body {
+            request_msg.extend(b);
+        }
+
+        request_msg
     }
 
     // pub fn root_cert_file_pem(&mut self, file_path: &'a Path) -> &mut Self {
