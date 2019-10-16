@@ -133,6 +133,58 @@ impl Uri {
     pub fn socket_addr(&self) -> Result<SocketAddr> {
         Ok(self.socket_addrs()?[0])
     }
+
+    pub fn is_ssl(&self) -> bool {
+        self.scheme() == "https"
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        let mut vec = Vec::new();
+        vec.push(self.addr_type());
+        match self.addr {
+            Addr::Ipv4(_) => vec.append(&mut self.host_vec()),
+            Addr::Ipv6(_) => vec.append(&mut self.host_vec()),
+            Addr::Domain(_) => {
+                let mut addr = self.host_vec();
+                vec.push(addr.len() as u8);
+                vec.append(&mut addr);
+            }
+        }
+        vec.append(&mut self.addr_port());
+        vec
+    }
+
+    pub fn host_vec(&self) -> Vec<u8> {
+        match &self.addr {
+            Addr::Ipv4(ipv4) => ipv4.octets().to_vec(),
+            Addr::Ipv6(ipv6) => ipv6.octets().to_vec(),
+            Addr::Domain(domain) => domain.as_bytes().to_vec(),
+        }
+    }
+
+    fn addr_type(&self) -> u8 {
+        match self.addr {
+            Addr::Ipv4(_) => 1u8,
+            Addr::Ipv6(_) => 4u8,
+            Addr::Domain(_) => 3u8,
+        }
+    }
+
+    fn addr_port(&self) -> Vec<u8> {
+        let port = self.default_port();
+        vec![((port >> 8) & 0xff) as u8, (port & 0xff) as u8]
+    }
+
+    pub fn check_supported_proxy(self) -> Result<Self> {
+        match self.scheme() {
+            "http" | "https" | "socks5" | "socks5h" => Ok(self),
+            s => Err(Error::UnsupportedScheme(s.to_string())),
+        }
+    }
+
+    pub fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
 }
 
 impl fmt::Display for Uri {

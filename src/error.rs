@@ -1,49 +1,6 @@
 use std::{error, fmt, io, net, result};
-// use failure::Fail;
 
 pub type Result<T> = result::Result<T, Error>;
-
-// #[derive(Debug, Fail)]
-// pub enum Error {
-//     #[fail(display = "{}", _0)]
-//     Io(#[cause] std::io::Error),
-//     #[fail(display = "Unknown method {}", _0)]
-//     UnknownMethod(String),
-//     #[fail(display = "Unsupported version {}", _0)]
-//     UnsupportedVersion(String),
-//     #[fail(display = "Uri no have scheme")]
-//     EmptyScheme,
-//     // #[fail(display = "Uri {} no have port", _0)]
-//     // NoPort(http::Uri),
-//     // #[fail(display = "Uri {} no have host and port", _0)]
-//     // NoHostPort(http::Uri),
-//     #[fail(display = "Unsupported proxy cheme")]
-//     UnsupportedProxyScheme,
-//     #[fail(display = "Unsupported scheme {}", _0)]
-//     UnsupportedScheme(String),
-//     #[fail(display = "None string")]
-//     NoneString,
-//     #[fail(display = "Parse fragmeng {}", _0)]
-//     ParseFragment(String),
-//     #[fail(display = "Parse query {}", _0)]
-//     ParseQuery(String),
-//     #[fail(display = "Parse scheme {}", _0)]
-//     ParseScheme(String),
-//     #[fail(display = "Parse user info {}", _0)]
-//     ParseUserInfo(String),
-//     #[fail(display = "Parse host {}", _0)]
-//     ParseHost(String),
-//     #[fail(display = "Parse ip version 6 {}", _0)]
-//     ParseIPv6(String),
-//     #[fail(display = "Parse port {}", _0)]
-//     ParsePort(String),
-// }
-
-// impl From<std::io::Error> for Error {
-//     fn from(err: std::io::Error) -> Error {
-//         Error::Io(err)
-//     }
-// }
 
 #[derive(Debug)]
 pub enum Error {
@@ -68,6 +25,20 @@ pub enum Error {
     UnsupportedScheme(String),
     UnsupportedVersion(String),
     WrongHttp,
+    InvalidServerVersion,
+    InvalidAuthVersion,
+    AuthFailure,
+    InvalidAuthMethod,
+    InvalidAddressType,
+    InvalidReservedByte,
+    UnknownError,
+    InvalidCommandProtocol,
+    TtlExpired,
+    RefusedByHost,
+    HostUnreachable,
+    NetworkUnreachable,
+    InvalidRuleset,
+    GeneralFailure,
 }
 
 impl fmt::Display for Error {
@@ -96,6 +67,20 @@ impl fmt::Display for Error {
             UnsupportedScheme(e) => write!(w, "unsupported scheme {}", e),
             UnsupportedVersion(e) => write!(w, "unsupported version {}", e),
             WrongHttp => write!(w, "wrong http"),
+            InvalidServerVersion => write!(w, "invalid socks server version"),
+            InvalidAuthVersion => write!(w, "invalid auth version"),
+            AuthFailure => write!(w, "failure, connection must be closed"),
+            InvalidAuthMethod => write!(w, "auth method not supported"),
+            InvalidAddressType => write!(w, "Invalid address type"),
+            InvalidReservedByte => write!(w, "Invalid reserved byte"),
+            UnknownError => write!(w, "Unknown error"),
+            InvalidCommandProtocol => write!(w, "Command not supported / protocol error"),
+            TtlExpired => write!(w, "TTL expired"),
+            RefusedByHost => write!(w, "Connection refused by destination host"),
+            HostUnreachable => write!(w, "Host unreachable"),
+            NetworkUnreachable => write!(w, "Network unreachable"),
+            InvalidRuleset => write!(w, "Connection not allowed by ruleset"),
+            GeneralFailure => write!(w, "General failure"),
         }
     }
 }
@@ -126,6 +111,20 @@ impl error::Error for Error {
             UnsupportedScheme(_) => "unsupported scheme",
             UnsupportedVersion(_) => "unsupported version",
             WrongHttp => "wrong http",
+            InvalidServerVersion => "invalid socks server version",
+            InvalidAuthVersion => "invalid auth version",
+            AuthFailure => "failure, connection must be closed",
+            InvalidAuthMethod => "auth method not supported",
+            InvalidAddressType => "Invalid address type",
+            InvalidReservedByte => "Invalid reserved byte",
+            UnknownError => "Unknown error",
+            InvalidCommandProtocol => "Command not supported / protocol error",
+            TtlExpired => "TTL expired",
+            RefusedByHost => "Connection refused by destination host",
+            HostUnreachable => "Host unreachable",
+            NetworkUnreachable => "Network unreachable",
+            InvalidRuleset => "Connection not allowed by ruleset",
+            GeneralFailure => "General failure",
         }
     }
 
@@ -154,6 +153,20 @@ impl error::Error for Error {
             UnsupportedScheme(_) => None,
             UnsupportedVersion(_) => None,
             WrongHttp => None,
+            InvalidServerVersion => None,
+            InvalidAuthVersion => None,
+            AuthFailure => None,
+            InvalidAuthMethod => None,
+            InvalidAddressType => None,
+            InvalidReservedByte => None,
+            UnknownError => None,
+            InvalidCommandProtocol => None,
+            TtlExpired => None,
+            RefusedByHost => None,
+            HostUnreachable => None,
+            NetworkUnreachable => None,
+            InvalidRuleset => None,
+            GeneralFailure => None,
         }
     }
 }
@@ -164,23 +177,11 @@ impl From<io::Error> for Error {
     }
 }
 
-// impl From<fmt::Error> for Error {
-//     fn from(err: fmt::Error) -> Error {
-//         Error::Fmt(err)
-//     }
-// }
-
 impl From<net::AddrParseError> for Error {
     fn from(err: net::AddrParseError) -> Error {
         Error::StdParseAddr(err)
     }
 }
-
-// impl From<url::ParseError> for Error {
-//     fn from(err: url::ParseError) -> Error {
-//         Error::ParseUrl(err)
-//     }
-// }
 
 impl From<native_tls::Error> for Error {
     fn from(err: native_tls::Error) -> Error {
@@ -193,22 +194,3 @@ impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
         Error::HandshakeError(err)
     }
 }
-// Io{source: std::io::Error} = "IO Error: {:?}",
-// UnknownMethod{method: String} = "Unknown method {method}",
-// UnsupportedVersion{version: String} = "Unsupported version {version}",
-// EmptyScheme = "Uri no have scheme",
-// UnsupportedProxyScheme = "Unsupported proxy scheme",
-// UnsupportedScheme{scheme: String} = "Unsupported scheme {scheme}",
-// NoneString = "None string",
-// ParseFragment{fragmeng: String} = "Parse fragmeng {fragmeng}",
-// ParseQuery{query: String} = "Parse query {query}",
-// ParseScheme{scheme: String} = "Parse scheme {scheme}",
-// ParseUserInfo{userinfo:String} = "Parse user info {userinfo}",
-// ParseHost{host:String} = "Parse host {host}",
-// ParseIPv6{ipv6: String} = "Parse ip version 6 {ipv6}",
-// ParsePort{port:String} = "Parse port {port}",
-
-// #[fail(display = "Uri {} no have port", _0)]
-// NoPort(http::Uri),
-// #[fail(display = "Uri {} no have host and port", _0)]
-// NoHostPort(http::Uri),

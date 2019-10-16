@@ -13,8 +13,9 @@ pub mod transport;
 pub mod uri;
 pub mod userinfo;
 pub mod version;
-// pub mod http;
+pub mod http;
 pub mod stream;
+pub mod socks;
 
 fn main() {
     // let mut client = Client::new("http://api.ipify.org").unwrap();

@@ -1,8 +1,8 @@
-use std::net::TcpStream;
-use std::io::{Write, Read};
+// use std::net::TcpStream;
+// use std::io::{Write, Read};
 
 // use crate::builder::{RequestBuilder};
-use crate::error::{Error, Result};
+use crate::error::{Result};
 use crate::method::Method;
 use crate::request::Request;
 use crate::transport::Transport;
@@ -10,9 +10,10 @@ use crate::uri::{IntoUri, Uri};
 
 #[derive(Debug)]
 pub struct Client {
-    uri: Uri,
-    transport: Transport,
     request: Request,
+    uri: Uri,
+    proxy: Option<Uri>,
+    transport: Transport,
 }
 
 impl Client {
@@ -20,7 +21,8 @@ impl Client {
         let uri = uri.into_uri()?;
         Ok(Client {
             request: Request::new(&uri),
-            uri, 
+            uri,
+            proxy: None,
             transport: Transport::new(),
         })
     }
@@ -55,34 +57,34 @@ impl Client {
         self
     }
 
-    pub fn proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-        self.transport = Transport::proxy(&uri.into_uri()?)?;
-        Ok(())
+    pub fn proxy<U: IntoUri>(&mut self, uri: U) -> Result<&mut Self> {
+        self.proxy = Some(uri.into_uri()?.check_supported_proxy()?);
+        Ok(self)
     }
 
-    pub fn http_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-        self.transport = Transport::proxy_http(&uri.into_uri()?)?;
-        Ok(())
-    }
-
-    pub fn htts_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-        self.transport = Transport::proxy_https(&uri.into_uri()?)?;
-        Ok(())
-    }
-
-    pub fn socks_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-        self.transport = Transport::proxy_socks(&uri.into_uri()?)?;
-        Ok(())
-    }
-
-    // fn connect(&mut self) -> Result<()> {
-    //     match self.transport {
-    //         Transport::Proxy(_) => (),
-    //         Transport::Stream(_) => (),
-    //         Transport::None => self.transport = Transport::Stream(TcpStream::connect(self.uri.socket_addr()?)?),
-    //     };
+    // pub fn http_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
+    //     self.transport = Transport::proxy_http(&uri.into_uri()?)?;
     //     Ok(())
     // }
+
+    // pub fn htts_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
+    //     self.transport = Transport::proxy_https(&uri.into_uri()?)?;
+    //     Ok(())
+    // }
+
+    // pub fn socks_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
+    //     self.transport = Transport::proxy_socks(&uri.into_uri()?)?;
+    //     Ok(())
+    // }
+
+    pub fn connect(&mut self) -> Result<&mut Self> {
+        if let Some(ref proxy) = self.proxy {
+            self.transport = Transport::proxy(&self.uri, proxy)?;
+        } else {
+            self.transport = Transport::stream(&self.uri)?;
+        }
+        Ok(self)
+    }
 
     // pub fn build(&mut self) -> Result<String> {
     //     self.connect()?;

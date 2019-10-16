@@ -1,211 +1,76 @@
-use std::net::SocketAddr;
-use std::str::FromStr;
-
-// use http::{HeaderValue, Uri};
-
 use crate::error::{Error, Result};
-// use crate::scheme::Scheme;
+use crate::http::HttpStream;
 use crate::uri::Uri;
-use crate::userinfo::UserInfo;
+use crate::socks::SocksStream;
 
-pub trait IntoProxyScheme {
-    fn into_proxy_scheme(self) -> Result<ProxyScheme>;
+#[derive(Debug)]
+pub struct HttpProxy {
+    stream: HttpStream,
 }
 
-// impl<T: IntoUri> IntoProxyScheme for T {
-//     fn into_proxy_scheme(self) -> Result<ProxyScheme> {
-//         ProxyScheme::parse(self.into_uri()?)
-//     }
-// }
-
-impl IntoProxyScheme for Uri {
-    fn into_proxy_scheme(self) -> Result<ProxyScheme> {
-        ProxyScheme::parse(self)
-    }
+#[derive(Debug)]
+pub struct SocksProxy {
+    stream: SocksStream,
 }
 
-impl IntoProxyScheme for ProxyScheme {
-    fn into_proxy_scheme(self) -> Result<ProxyScheme> {
-        Ok(self)
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Proxy {
-    Http(ProxyScheme),
-    Https(ProxyScheme),
-    Socks(ProxyScheme),
+    Http(HttpProxy),
+    Https(HttpProxy),
+    Socks(SocksProxy),
 }
 
 impl Proxy {
-    pub fn http(uri: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Http(uri.clone().into_proxy_scheme()?))
-    }
-
-    pub fn https(uri: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Https(uri.clone().into_proxy_scheme()?))
-    }
-
-    pub fn socks(uri: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Socks(uri.clone().into_proxy_scheme()?))
-    }
-
-    pub fn parse(uri: &Uri) -> Result<Proxy> {
-        match uri.scheme() {
-            "http" => Self::http(uri),
-            "https" => Self::https(uri),
-            "socks5" | "socks5h" => Self::socks(uri),
-            s => Err(Error::UnsupportedScheme(s.to_string())),
+    pub fn proxy(proxy: &Uri, target: &Uri) -> Result<Proxy> {
+        match proxy.scheme() {
+            "http" => Proxy::http(proxy),
+            "https" => Proxy::https(proxy),
+            "socks5" => Proxy::socks5(proxy, target),
+            "socks5h" => Proxy::socks5h(proxy, target),
+            s => Err(Error::UnsupportedScheme(s.to_owned())),
         }
     }
 
-    // fn new(intercept: Intercept) -> Proxy {
-    //     Proxy { intercept }
-    // }
-
-    // pub fn basic_auth(mut self, username: &str, password: &str) -> Proxy {
-    //     self.intercept.set_basic_auth(username, password);
-    //     self
-    // }
-
-    // pub(crate) fn maybe_has_http_auth(&self) -> bool {
-    //     match self.intercept {
-    //         Intercept::All(ProxyScheme::Http { auth: Some(..), .. }) |
-    //         Intercept::Http(ProxyScheme::Http { auth: Some(..), .. }) |
-    //         // Custom *may* match 'http', so assume so.
-    //         Intercept::Custom(_) => true,
-    //         _ => false,
-    //     }
-    // }
-
-    // pub(crate) fn http_basic_auth<D: Dst>(&self, uri: &D) -> Option<HeaderValue> {
-    //     match self.intercept {
-    //         Intercept::All(ProxyScheme::Http { ref auth, .. })
-    //         | Intercept::Http(ProxyScheme::Http { ref auth, .. }) => auth.clone(),
-    //         Intercept::Custom(ref custom) => custom.call(uri).and_then(|scheme| match scheme {
-    //             ProxyScheme::Http { auth, .. } => auth,
-    //             #[cfg(feature = "socks")]
-    //             _ => None,
-    //         }),
-    //         _ => None,
-    //     }
-    // }
-
-    // pub(crate) fn intercept<D: Dst>(&self, uri: &D) -> Option<ProxyScheme> {
-    //     match self.intercept {
-    //         Intercept::All(ref u) => Some(u.clone()),
-    //         Intercept::Http(ref u) => {
-    //             if uri.scheme() == "http" {
-    //                 Some(u.clone())
-    //             } else {
-    //                 None
-    //             }
-    //         }
-    //         Intercept::Https(ref u) => {
-    //             if uri.scheme() == "https" {
-    //                 Some(u.clone())
-    //             } else {
-    //                 None
-    //             }
-    //         }
-    //         Intercept::Custom(ref custom) => custom.call(uri),
-    //     }
-    // }
-
-    // pub(crate) fn is_match<D: Dst>(&self, uri: &D) -> bool {
-    //     match self.intercept {
-    //         Intercept::All(_) => true,
-    //         Intercept::Http(_) => uri.scheme() == "http",
-    //         Intercept::Https(_) => uri.scheme() == "https",
-    //         Intercept::Custom(ref custom) => custom.call(uri).is_some(),
-    //     }
-    // }
-}
-
-#[derive(Clone, Debug)]
-pub enum ProxyScheme {
-    Http {
-        uri: Uri,
-    },
-    Socks5 {
-        addr: SocketAddr,
-        auth: Option<UserInfo>,
-        remote_dns: bool,
-    },
-}
-
-impl ProxyScheme {
-    fn http(uri: Uri) -> Result<Self> {
-        Ok(ProxyScheme::Http { uri })
+    pub fn http(proxy: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Http(HttpProxy{stream: HttpStream::connect_proxy(proxy)?}))
     }
 
-    fn socks5(addr: SocketAddr) -> Result<Self> {
-        Ok(ProxyScheme::Socks5 {
-            addr,
-            auth: None,
-            remote_dns: false,
-        })
+    pub fn https(proxy: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Https(HttpProxy{stream: HttpStream::connect_proxy(proxy)?}))
     }
 
-    fn socks5h(addr: SocketAddr) -> Result<Self> {
-        Ok(ProxyScheme::Socks5 {
-            addr,
-            auth: None,
-            remote_dns: true,
-        })
+    pub fn socks5(proxy: &Uri, target: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Socks(SocksProxy{stream: SocksStream::connect(proxy, target)?}))
     }
 
-    fn parse(uri: Uri) -> Result<Self> {
-        match uri.scheme() {
-            "http" | "https" => Self::http(uri.clone()),
-            "socks5" => Self::socks5(uri.socket_addr()?),
-            "socks5h" => Self::socks5h(uri.socket_addr()?),
-            s => Err(Error::UnsupportedScheme(s.to_string())),
-        }
-    }
-
-    // fn with_basic_auth<T: Into<String>, U: Into<String>>(
-    //     mut self,
-    //     username: T,
-    //     password: U,
-    // ) -> Self {
-    //     self.set_basic_auth(username, password);
-    //     self
-    // }
-
-    // fn set_basic_auth<T: Into<String>, U: Into<String>>(&mut self, username: T, password: U) {
-    //     match *self {
-    //         ProxyScheme::Http { ref mut auth, .. } => {
-    //             let header = encode_basic_auth(&username.into(), &password.into());
-    //             *auth = Some(header);
-    //         }
-    //         #[cfg(feature = "socks")]
-    //         ProxyScheme::Socks5 { ref mut auth, .. } => {
-    //             *auth = Some((username.into(), password.into()));
-    //         }
-    //     }
-    // }
-}
-
-impl FromStr for ProxyScheme {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let uri = s.parse::<Uri>()?;
-        match uri.scheme() {
-            "http" | "https" => Self::http(uri.clone()),
-            "socks5" => Self::socks5(uri.socket_addr()?),
-            "socks5h" => Self::socks5h(uri.socket_addr()?),
-            _ => Err(Error::UnsupportedScheme(s.to_string())),
-        }
-
-        // if let Some(pwd) = uri.password() {
-        //     let decoded_username = percent_decode(uri.username().as_bytes()).decode_utf8_lossy();
-        //     let decoded_password = percent_decode(pwd.as_bytes()).decode_utf8_lossy();
-        //     scheme = scheme.with_basic_auth(decoded_username, decoded_password);
-        // }
+    pub fn socks5h(proxy: &Uri, target: &Uri) -> Result<Proxy> {
+        Ok(Proxy::Socks(SocksProxy{stream: SocksStream::connect(proxy, target)?}))
     }
 }
+
+//     // fn with_basic_auth<T: Into<String>, U: Into<String>>(
+//     //     mut self,
+//     //     username: T,
+//     //     password: U,
+//     // ) -> Self {
+//     //     self.set_basic_auth(username, password);
+//     //     self
+//     // }
+
+//     // fn set_basic_auth<T: Into<String>, U: Into<String>>(&mut self, username: T, password: U) {
+//     //     match *self {
+//     //         ProxyScheme::Http { ref mut auth, .. } => {
+//     //             let header = encode_basic_auth(&username.into(), &password.into());
+//     //             *auth = Some(header);
+//     //         }
+//     //         #[cfg(feature = "socks")]
+//     //         ProxyScheme::Socks5 { ref mut auth, .. } => {
+//     //             *auth = Some((username.into(), password.into()));
+//     //         }
+//     //     }
+//     // }
+// }
+
 
 // impl Intercept {
 // fn set_basic_auth(&mut self, username: &str, password: &str) {
