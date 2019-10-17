@@ -1,6 +1,7 @@
 use crate::error::{Error, Result};
 use crate::http::HttpStream;
 use crate::request::Request;
+use crate::response::Response;
 use crate::socks::SocksStream;
 use crate::uri::Uri;
 
@@ -56,11 +57,27 @@ impl Proxy {
         }))
     }
 
-    pub fn get_body(&mut self, req: &Request) -> Result<String> {
+    pub fn send_request(&mut self, req: &Request) -> Result<()> {
         match self {
-            Proxy::Http(http_proxy) => http_proxy.stream.get_body(req),
-            Proxy::Https(http_proxy) => http_proxy.stream.get_body(req),
-            Proxy::Socks(socks_proxy) => socks_proxy.stream.get_body(req),
+            Proxy::Http(http_proxy) => http_proxy.stream.send_request(req),
+            Proxy::Https(http_proxy) => http_proxy.stream.send_request(req),
+            Proxy::Socks(socks_proxy) => socks_proxy.stream.send_request(req),
+        }
+    }
+
+    pub fn get_response(&mut self) -> Result<Response> {
+        match self {
+            Proxy::Http(http_proxy) => http_proxy.stream.get_response(),
+            Proxy::Https(http_proxy) => http_proxy.stream.get_response(),
+            Proxy::Socks(socks_proxy) => socks_proxy.stream.get_response(),
+        }
+    }
+
+    pub fn get_body(&mut self, content_len: usize) -> Result<Vec<u8>> {
+        match self {
+            Proxy::Http(http_proxy) => http_proxy.stream.get_body(content_len),
+            Proxy::Https(http_proxy) => http_proxy.stream.get_body(content_len),
+            Proxy::Socks(socks_proxy) => socks_proxy.stream.get_body(content_len),
         }
     }
 }

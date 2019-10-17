@@ -22,14 +22,24 @@ impl Stream {
         Ok(Stream::Tls(Box::new(builder.connect(domain, stream)?)))
     }
 
+    pub fn send_msg(stream: &mut Stream, msg: &[u8]) -> Result<()> {
+        stream.write_all(msg)?;
+        stream.flush()?;
+        Ok(())
+    }
+
     pub fn read_head(stream: &mut Stream) -> Result<Response> {
-    let mut head = Vec::with_capacity(200);
-    match stream {
-            Stream::Tcp(stream) => copy_until(stream, &mut head, &[13, 10, 13, 10])?,
-            Stream::Tls(stream) => copy_until(stream, &mut head, &[13, 10, 13, 10])?,
-        };
-    Response::from_head(&head)
-}
+        let mut head = Vec::with_capacity(200);
+        copy_until(stream, &mut head, &[13, 10, 13, 10])?;
+        Response::from_head(&head)
+    }
+
+    pub fn get_body(stream: &mut Stream, content_len: usize) -> Result<Vec<u8>> {
+        let mut response = Vec::with_capacity(content_len);
+        stream.read_exact(&mut response)?;
+        // Ok(String::from_utf8_lossy(&response).to_string())
+        Ok(response)
+    }
 }
 
 impl Read for Stream {

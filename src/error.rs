@@ -151,7 +151,7 @@ impl error::Error for Error {
 
         match self {
             EmptyScheme => None,
-            EmptyResponse =>None,
+            EmptyResponse => None,
             EmptyAuthority => None,
             Io(e) => e.source(),
             HandshakeError(e) => e.source(),

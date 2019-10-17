@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::fmt;
+use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
@@ -67,7 +67,7 @@ impl StatusCode {
         self.0 >= 100 && self.0 < 200
     }
 
-   pub fn is_success(self) -> bool {
+    pub fn is_success(self) -> bool {
         self.0 >= 200 && self.0 < 300
     }
 
@@ -79,7 +79,7 @@ impl StatusCode {
         self.0 >= 400 && self.0 < 500
     }
 
-  pub fn is_server_err(self) -> bool {
+    pub fn is_server_err(self) -> bool {
         self.0 >= 500 && self.0 < 600
     }
 

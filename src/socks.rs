@@ -4,6 +4,7 @@ use std::net::{Ipv4Addr, Ipv6Addr, TcpStream};
 use crate::addr::Addr;
 use crate::error::{Error, Result};
 use crate::request::Request;
+use crate::response::Response;
 use crate::stream::Stream;
 use crate::uri::Uri;
 
@@ -238,12 +239,16 @@ impl SocksStream {
         })
     }
 
-    pub fn get_body(&mut self, req: &Request) -> Result<String> {
-        self.stream.write_all(&req.msg())?;
-        self.stream.flush()?;
-        let mut response = vec![];
-        self.stream.read_to_end(&mut response)?;
-        Ok(String::from_utf8_lossy(&response).to_string())
+    pub fn send_request(&mut self, req: &Request) -> Result<()> {
+        Stream::send_msg(&mut self.stream, &req.msg())
+    }
+
+    pub fn get_response(&mut self) -> Result<Response> {
+        Stream::read_head(&mut self.stream)
+    }
+
+    pub fn get_body(&mut self, content_len: usize) -> Result<Vec<u8>> {
+        Stream::get_body(&mut self.stream, content_len)
     }
 }
 

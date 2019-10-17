@@ -2,10 +2,8 @@ use std::io::Write;
 use std::str;
 
 use crate::error::{Error, Result};
-use crate::status::{Status, StatusCode};
 use crate::headers::Headers;
-
-// pub(crate) const CR_LF_2: [u8; 4] = [13, 10, 13, 10];
+use crate::status::{Status, StatusCode};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Response {
