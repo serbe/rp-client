@@ -3,7 +3,8 @@ use std::net::TcpStream;
 
 use crate::error::Result;
 use crate::request::Request;
-use crate::stream::Stream;
+use crate::response::Response;
+use crate::stream::{Stream};
 use crate::uri::Uri;
 
 #[derive(Debug)]
@@ -28,6 +29,10 @@ impl HttpStream {
         let stream = TcpStream::connect(target)?;
         let stream = Stream::new_tcp(stream);
         Ok(HttpStream { stream })
+    }
+
+    pub fn get_response(&mut self) -> Result<Response> {
+        Stream::read_head(&mut self.stream)
     }
 
     pub fn get_body(&mut self, req: &Request) -> Result<String> {

@@ -5,6 +5,7 @@ pub type Result<T> = result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     EmptyScheme,
+    EmptyResponse,
     EmptyAuthority,
     Io(io::Error),
     HandshakeError(native_tls::HandshakeError<std::net::TcpStream>),
@@ -40,6 +41,10 @@ pub enum Error {
     InvalidRuleset,
     GeneralFailure,
     FromUtf8(std::string::FromUtf8Error),
+    StatusErr,
+    HeadersErr,
+    ParseInt(std::num::ParseIntError),
+    Utf8(std::str::Utf8Error),
 }
 
 impl fmt::Display for Error {
@@ -48,6 +53,7 @@ impl fmt::Display for Error {
 
         match self {
             EmptyScheme => write!(w, "Uri no have scheme"),
+            EmptyResponse => write!(w, "empty response"),
             EmptyAuthority => write!(w, "Uri no have authority"),
             Io(e) => write!(w, "{}", e),
             HandshakeError(e) => write!(w, "{}", e),
@@ -74,15 +80,19 @@ impl fmt::Display for Error {
             InvalidAuthMethod => write!(w, "auth method not supported"),
             InvalidAddressType => write!(w, "Invalid address type"),
             InvalidReservedByte => write!(w, "Invalid reserved byte"),
-            UnknownError => write!(w, "Unknown error"),
-            InvalidCommandProtocol => write!(w, "Command not supported / protocol error"),
+            UnknownError => write!(w, "unknown error"),
+            InvalidCommandProtocol => write!(w, "command not supported / protocol error"),
             TtlExpired => write!(w, "TTL expired"),
-            RefusedByHost => write!(w, "Connection refused by destination host"),
-            HostUnreachable => write!(w, "Host unreachable"),
-            NetworkUnreachable => write!(w, "Network unreachable"),
-            InvalidRuleset => write!(w, "Connection not allowed by ruleset"),
-            GeneralFailure => write!(w, "General failure"),
+            RefusedByHost => write!(w, "connection refused by destination host"),
+            HostUnreachable => write!(w, "host unreachable"),
+            NetworkUnreachable => write!(w, "network unreachable"),
+            InvalidRuleset => write!(w, "connection not allowed by ruleset"),
+            GeneralFailure => write!(w, "general failure"),
             FromUtf8(e) => write!(w, "{}", e),
+            StatusErr => write!(w, "bad status"),
+            HeadersErr => write!(w, "bad headers"),
+            ParseInt(e) => write!(w, "{}", e),
+            Utf8(e) => write!(w, "{}", e),
         }
     }
 }
@@ -93,6 +103,7 @@ impl error::Error for Error {
 
         match self {
             EmptyScheme => "Uri no have scheme",
+            EmptyResponse => "empty response",
             EmptyAuthority => "Uri no have authority",
             Io(e) => e.description(),
             HandshakeError(e) => e.description(),
@@ -128,6 +139,10 @@ impl error::Error for Error {
             InvalidRuleset => "Connection not allowed by ruleset",
             GeneralFailure => "General failure",
             FromUtf8(e) => e.description(),
+            StatusErr => "bad status",
+            HeadersErr => "bad headers",
+            ParseInt(e) => e.description(),
+            Utf8(e) => e.description(),
         }
     }
 
@@ -136,6 +151,7 @@ impl error::Error for Error {
 
         match self {
             EmptyScheme => None,
+            EmptyResponse =>None,
             EmptyAuthority => None,
             Io(e) => e.source(),
             HandshakeError(e) => e.source(),
@@ -171,6 +187,10 @@ impl error::Error for Error {
             InvalidRuleset => None,
             GeneralFailure => None,
             FromUtf8(e) => e.source(),
+            StatusErr => None,
+            HeadersErr => None,
+            ParseInt(e) => e.source(),
+            Utf8(e) => e.source(),
         }
     }
 }
@@ -202,5 +222,17 @@ impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
 impl From<std::string::FromUtf8Error> for Error {
     fn from(err: std::string::FromUtf8Error) -> Error {
         Error::FromUtf8(err)
+    }
+}
+
+impl From<std::num::ParseIntError> for Error {
+    fn from(err: std::num::ParseIntError) -> Error {
+        Error::ParseInt(err)
+    }
+}
+
+impl From<std::str::Utf8Error> for Error {
+    fn from(err: std::str::Utf8Error) -> Error {
+        Error::Utf8(err)
     }
 }
