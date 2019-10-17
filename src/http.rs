@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 use std::net::TcpStream;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::request::Request;
 use crate::stream::Stream;
 use crate::uri::Uri;
@@ -35,7 +35,7 @@ impl HttpStream {
         self.stream.flush()?;
         let mut response = vec![];
         self.stream.read_to_end(&mut response)?;
-        String::from_utf8(response).map_err(Error::FromUtf8)
+        Ok(String::from_utf8_lossy(&response).to_string())
     }
 }
 

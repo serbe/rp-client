@@ -243,7 +243,7 @@ impl SocksStream {
         self.stream.flush()?;
         let mut response = vec![];
         self.stream.read_to_end(&mut response)?;
-        String::from_utf8(response).map_err(Error::FromUtf8)
+        Ok(String::from_utf8_lossy(&response).to_string())
     }
 }
 
