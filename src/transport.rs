@@ -1,7 +1,7 @@
 use crate::error::Result;
+use crate::http::HttpStream;
 use crate::proxy::Proxy;
 use crate::uri::Uri;
-use crate::http::HttpStream;
 
 #[derive(Debug)]
 pub enum Transport {

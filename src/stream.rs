@@ -18,9 +18,7 @@ impl Stream {
 
     pub fn new_tls(domain: &str, stream: TcpStream) -> Result<Self> {
         let builder = TlsConnector::new()?;
-        Ok(Stream::Tls(Box::new(
-            builder.connect(domain, stream)?,
-        )))
+        Ok(Stream::Tls(Box::new(builder.connect(domain, stream)?)))
     }
 }
 
