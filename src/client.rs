@@ -103,7 +103,7 @@ impl Client {
         match self.transport {
             Transport::Proxy(ref mut proxy) => proxy.send_request(&self.request),
             Transport::Stream(ref mut stream) => stream.send_request(&self.request),
-            Transport::None => return Err(Error::WrongHttp),
+            Transport::None => Err(Error::WrongHttp),
         }
     }
 
@@ -132,7 +132,7 @@ impl Client {
         match self.transport {
             Transport::Proxy(ref mut proxy) => proxy.get_body(content_len),
             Transport::Stream(ref mut stream) => stream.get_body(content_len),
-            Transport::None => return Err(Error::WrongHttp),
+            Transport::None => Err(Error::WrongHttp),
         }
     }
 
