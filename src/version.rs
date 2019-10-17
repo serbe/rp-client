@@ -61,7 +61,6 @@ impl fmt::Debug for Version {
     }
 }
 
-
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let version = match self {
@@ -73,11 +72,3 @@ impl fmt::Display for Version {
         write!(f, "{}", version)
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     // #[test]
-
-// }

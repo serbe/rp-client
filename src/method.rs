@@ -1,6 +1,5 @@
-// use bytes::Bytes;
-use std::str::FromStr;
 use std::fmt;
+use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
@@ -39,12 +38,6 @@ impl IntoMethod for String {
     }
 }
 
-// impl<'a> IntoMethod for Bytes {
-//     fn into_method(self) -> Result<Method> {
-//         Method::from_bytes(self)
-//     }
-// }
-
 impl Method {
     pub fn as_str(&self) -> &str {
         match self {
@@ -59,23 +52,6 @@ impl Method {
             Method::PATCH => "PATCH",
         }
     }
-
-    // pub fn from_bytes(b: Bytes) -> Result<Self> {
-    //     match &b[..] {
-    //         b"OPTIONS" => Ok(Method::OPTIONS),
-    //         b"GET" => Ok(Method::GET),
-    //         b"POST" => Ok(Method::POST),
-    //         b"PUT" => Ok(Method::PUT),
-    //         b"DELETE" => Ok(Method::DELETE),
-    //         b"HEAD" => Ok(Method::HEAD),
-    //         b"TRACE" => Ok(Method::TRACE),
-    //         b"CONNECT" => Ok(Method::CONNECT),
-    //         b"PATCH" => Ok(Method::PATCH),
-    //         _ => Err(Error::UnknownMethod(
-    //             String::from_utf8_lossy(&b[..]).to_string(),
-    //         )),
-    //     }
-    // }
 }
 
 impl Default for Method {
@@ -116,7 +92,6 @@ impl fmt::Display for Method {
             Method::TRACE => "TRACE",
             Method::CONNECT => "CONNECT",
         };
-
         write!(f, "{}", method)
     }
 }

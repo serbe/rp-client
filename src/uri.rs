@@ -110,18 +110,10 @@ impl Uri {
         result
     }
 
-    // pub fn domain(&self) -> Result<String> {
-    //     match &self.scheme() {
-    //         Some("http") | Some("https") | Some("socks5") | Some("socks5h") => Ok(self.origin()),
-    //         _ => Err(Error::UnsupportedProxyScheme),
-    //     }
-    // }
-
     pub fn origin(&self) -> String {
         format!("{}://{}", self.scheme(), self.host_port())
     }
 
-    // remove unwrap
     pub fn host_port(&self) -> String {
         format!("{}:{}", self.host(), self.default_port())
     }
@@ -246,10 +238,6 @@ impl FromStr for Uri {
 
         let (path, _uri_part) = get_chunks(&s, uri_part, "?", false, false);
 
-        // if authority.is_some() || &s[scheme] == "file" {
-        //     path = path.map(|p| RangeUsize::new(p.start - 1, p.end));
-        // }
-
         Ok(Uri {
             inner: s,
             scheme,
@@ -262,7 +250,6 @@ impl FromStr for Uri {
     }
 }
 
-//Removes whitespace from `text`
 fn remove_spaces(text: &mut String) {
     text.retain(|c| !c.is_whitespace());
 }
