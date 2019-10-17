@@ -58,6 +58,15 @@ impl Client {
         Ok(self)
     }
 
+    pub fn header<T, U>(&mut self, key: &T, val: &U) -> &mut Self
+    where
+        T: ToString + ?Sized,
+        U: ToString + ?Sized,
+    {
+        self.request.header(key, val);
+        self
+    }
+
     // pub fn http_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
     //     self.transport = Transport::proxy_http(&uri.into_uri()?)?;
     //     Ok(())
