@@ -75,4 +75,10 @@ mod tests {
             Addr::Domain("test.com".to_string())
         );
     }
+
+    #[test]
+    fn addr_err() {
+        assert!("127.0.0.1:123".parse::<Addr>().is_err());
+        assert!("test.com:80".parse::<Addr>().is_err());
+    }
 }
