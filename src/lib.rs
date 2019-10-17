@@ -1,13 +1,15 @@
 pub mod addr;
 pub mod authority;
-pub mod builder;
 pub mod client;
 pub mod error;
 pub mod headers;
+pub mod http;
 pub mod method;
 pub mod proxy;
 pub mod range;
 pub mod request;
+pub mod socks;
+pub mod stream;
 pub mod transport;
 pub mod uri;
 pub mod userinfo;
