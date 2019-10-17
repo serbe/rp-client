@@ -1,8 +1,7 @@
 use std::collections::{hash_map, HashMap};
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-use std::fmt::{Formatter, Display};
 
-use crate::uri::Uri;
 use crate::error::{Error, Result};
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -33,10 +32,10 @@ impl Headers {
         self.0.insert(key.to_string(), val.to_string())
     }
 
-    pub fn default_http(uri: &Uri) -> Headers {
+    pub fn default_http(host: &str) -> Headers {
         let mut headers = Headers::with_capacity(4);
 
-        headers.insert("Host", &uri.host_header());
+        headers.insert("Host", host);
         // headers.insert("Referer", &uri);
         headers.insert("Connection", "Close");
 

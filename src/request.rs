@@ -1,5 +1,4 @@
 use std::net::{TcpStream, ToSocketAddrs};
-// use std::io::Write;
 use std::time::Duration;
 
 use crate::headers::Headers;
@@ -9,12 +8,11 @@ use crate::version::Version;
 
 #[derive(Clone, Debug)]
 pub struct Request {
-    uri: Uri,
+    resource: String,
     headers: Headers,
     method: Method,
     version: Version,
     body: Option<Vec<u8>>,
-    // is_http_proxy: bool,
     // connect_timeout: Option<Duration>,
     // read_timeout: Option<Duration>,
     // write_timeout: Option<Duration>,
@@ -24,12 +22,11 @@ pub struct Request {
 impl Request {
     pub fn new(uri: &Uri) -> Request {
         Request {
-            headers: Headers::default_http(&uri),
-            uri: uri.clone(),
+            headers: Headers::default_http(&uri.host_header()),
+            resource: uri.resource().to_string(),
             method: Method::GET,
             version: Version::Http11,
             body: None,
-            // is_http_proxy: false,
         }
     }
 
@@ -90,10 +87,7 @@ impl Request {
     pub fn msg(&self) -> Vec<u8> {
         let request_line = format!(
             "{} {} {}{}",
-            self.method,
-            self.uri.resource(),
-            self.version,
-            "\r\n"
+            self.method, self.resource, self.version, "\r\n"
         );
 
         let headers: String = self
@@ -110,35 +104,6 @@ impl Request {
 
         request_msg
     }
-
-    // pub fn root_cert_file_pem(&mut self, file_path: &'a Path) -> &mut Self {
-    //     self.root_cert_file_pem = Some(file_path);
-    //     self
-    // }
-
-    // pub fn send<T: Write>(&self, writer: &mut T) -> Result<Response> {
-    //     let host = self.inner.uri.host();
-    //     let port = self.inner.uri.default_port();
-    //     let mut stream = match self.connect_timeout {
-    //         Some(timeout) => connect_timeout(host, port, timeout)?,
-    //         None => TcpStream::connect((host, port))?,
-    //     };
-
-    //     stream.set_read_timeout(self.read_timeout)?;
-    //     stream.set_write_timeout(self.write_timeout)?;
-
-    //     // if self.inner.uri.scheme() == "https" {
-    //     //     let mut cnf = tls::Config::default();
-    //     //     let cnf = match self.root_cert_file_pem {
-    //     //         Some(p) => cnf.add_root_cert_file_pem(p)?,
-    //     //         None => &mut cnf,
-    //     //     };
-    //     //     let mut stream = cnf.connect(host, stream)?;
-    //     //     self.inner.send(&mut stream, writer)
-    //     // } else {
-    //         self.inner.send(&mut stream, writer)
-    //     // }
-    // }
 }
 
 pub fn connect_timeout<T, U>(host: T, port: u16, timeout: U) -> std::io::Result<TcpStream>
@@ -170,16 +135,3 @@ where
         format!("Could not resolve address for {:?}", host),
     ))
 }
-
-// pub fn get<T: AsRef<str>, U: Write>(uri: T, writer: &mut U) -> Result<Response, error::Error> {
-//     let uri = uri.as_ref().parse::<Uri>()?;
-
-//     Request::new(&uri).send(writer)
-// }
-
-// pub fn head<T: AsRef<str>>(uri: T) -> Result<Response, error::Error> {
-//     let mut writer = Vec::new();
-//     let uri = uri.as_ref().parse::<Uri>()?;
-
-//     Request::new(&uri).method(Method::HEAD).send(&mut writer)
-// }
