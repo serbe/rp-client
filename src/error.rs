@@ -39,6 +39,7 @@ pub enum Error {
     NetworkUnreachable,
     InvalidRuleset,
     GeneralFailure,
+    FromUtf8(std::string::FromUtf8Error),
 }
 
 impl fmt::Display for Error {
@@ -81,6 +82,7 @@ impl fmt::Display for Error {
             NetworkUnreachable => write!(w, "Network unreachable"),
             InvalidRuleset => write!(w, "Connection not allowed by ruleset"),
             GeneralFailure => write!(w, "General failure"),
+            FromUtf8(e) => write!(w, "{}", e),
         }
     }
 }
@@ -125,6 +127,7 @@ impl error::Error for Error {
             NetworkUnreachable => "Network unreachable",
             InvalidRuleset => "Connection not allowed by ruleset",
             GeneralFailure => "General failure",
+            FromUtf8(e) => e.description(),
         }
     }
 
@@ -167,6 +170,7 @@ impl error::Error for Error {
             NetworkUnreachable => None,
             InvalidRuleset => None,
             GeneralFailure => None,
+            FromUtf8(e) => e.source(),
         }
     }
 }
@@ -192,5 +196,11 @@ impl From<native_tls::Error> for Error {
 impl From<native_tls::HandshakeError<std::net::TcpStream>> for Error {
     fn from(err: native_tls::HandshakeError<std::net::TcpStream>) -> Error {
         Error::HandshakeError(err)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(err: std::string::FromUtf8Error) -> Error {
+        Error::FromUtf8(err)
     }
 }

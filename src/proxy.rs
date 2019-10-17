@@ -1,7 +1,8 @@
 use crate::error::{Error, Result};
 use crate::http::HttpStream;
-use crate::uri::Uri;
+use crate::request::Request;
 use crate::socks::SocksStream;
+use crate::uri::Uri;
 
 #[derive(Debug)]
 pub struct HttpProxy {
@@ -32,19 +33,35 @@ impl Proxy {
     }
 
     pub fn http(proxy: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Http(HttpProxy{stream: HttpStream::connect_proxy(proxy)?}))
+        Ok(Proxy::Http(HttpProxy {
+            stream: HttpStream::connect_proxy(proxy)?,
+        }))
     }
 
     pub fn https(proxy: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Https(HttpProxy{stream: HttpStream::connect_proxy(proxy)?}))
+        Ok(Proxy::Https(HttpProxy {
+            stream: HttpStream::connect_proxy(proxy)?,
+        }))
     }
 
     pub fn socks5(proxy: &Uri, target: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Socks(SocksProxy{stream: SocksStream::connect(proxy, target)?}))
+        Ok(Proxy::Socks(SocksProxy {
+            stream: SocksStream::connect(proxy, target)?,
+        }))
     }
 
     pub fn socks5h(proxy: &Uri, target: &Uri) -> Result<Proxy> {
-        Ok(Proxy::Socks(SocksProxy{stream: SocksStream::connect(proxy, target)?}))
+        Ok(Proxy::Socks(SocksProxy {
+            stream: SocksStream::connect(proxy, target)?,
+        }))
+    }
+
+    pub fn get_body(&mut self, req: &Request) -> Result<String> {
+        match self {
+            Proxy::Http(http_proxy) => http_proxy.stream.get_body(req),
+            Proxy::Https(http_proxy) => http_proxy.stream.get_body(req),
+            Proxy::Socks(socks_proxy) => socks_proxy.stream.get_body(req),
+        }
     }
 }
 
@@ -70,7 +87,6 @@ impl Proxy {
 //     //     }
 //     // }
 // }
-
 
 // impl Intercept {
 // fn set_basic_auth(&mut self, username: &str, password: &str) {

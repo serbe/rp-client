@@ -1,9 +1,9 @@
-// #![allow(dead_code)]
 use std::io::{self, Read, Write};
 use std::net::{Ipv4Addr, Ipv6Addr, TcpStream};
 
 use crate::addr::Addr;
 use crate::error::{Error, Result};
+use crate::request::Request;
 use crate::stream::Stream;
 use crate::uri::Uri;
 
@@ -199,8 +199,6 @@ fn get_port(socket: &mut TcpStream) -> Result<[u8; 2]> {
 pub struct SocksStream {
     stream: Stream,
     target: Addr,
-    // bind_addr: Host,
-    // bind_port: [u8; 2],
 }
 
 impl SocksStream {
@@ -214,11 +212,7 @@ impl SocksStream {
         username: &str,
         password: &str,
     ) -> Result<SocksStream> {
-        Self::handshake(
-            proxy,
-            target,
-            &SocksAuth::new_plain(username, password),
-        )
+        Self::handshake(proxy, target, &SocksAuth::new_plain(username, password))
     }
 
     fn handshake(proxy: &Uri, target: &Uri, auth: &SocksAuth) -> Result<SocksStream> {
@@ -241,126 +235,17 @@ impl SocksStream {
         Ok(SocksStream {
             stream,
             target: target.addr(),
-            // bind_addr,
-            // bind_port,
         })
     }
 
-    // fn get_stream(&self) -> io::Result<TcpStream> {
-    //     let mut stream = match self.stream {
-    //         Stream::Tcp(stream) => stream.try_clone()?,
-    //         Stream::Tls(stream) => *stream,
-    //     };
-    //     Ok(stream)
-    // }
-
-    // pub fn get(&mut self) -> io::Result<Vec<u8>> {
-    //     // let mut stream = self.get_stream?;
-    //     let request = format!(
-    //         "GET {} HTTP/1.0\r\nHost: {}\r\n\r\n",
-    //         self.target.path(),
-    //         self.target.host()?
-    //     )
-    //     .into_bytes();
-    //     self.stream.write_all(&request)?;
-    //     self.stream.flush()?;
-    //     let mut response = vec![];
-    //     self.stream.read_to_end(&mut response)?;
-    //     let pos = response
-    //         .windows(4)
-    //         .position(|x| x == b"\r\n\r\n")
-    //         .ok_or_else(|| Error::WrongHttp)?;
-    //     let body = &response[pos + 4..response.len()];
-    //     Ok(body.to_vec())
-    // }
-
-    // pub fn post_json(&mut self, body: &str) -> io::Result<Vec<u8>> {
-    //     let body = if !body.is_empty() {
-    //         format!("Content-Length: {}\r\n\r\n{}", body.len(), body)
-    //     } else {
-    //         String::new()
-    //     };
-    //     let request = format!(
-    //         "POST {} HTTP/1.0\r\nHost: {}\r\nContent-Type: application/json\r\n{}\r\n",
-    //         self.target.path(),
-    //         self.target.host()?,
-    //         body
-    //     )
-    //     .into_bytes();
-    //     self.stream.write_all(&request)?;
-    //     self.stream.flush()?;
-    //     let mut response = vec![];
-    //     self.stream.read_to_end(&mut response)?;
-    //     let pos = response
-    //         .windows(4)
-    //         .position(|x| x == b"\r\n\r\n")
-    //         .ok_or_else(|| Error::WrongHttp)?;
-    //     let body = &response[pos + 4..response.len()];
-    //     Ok(body.to_vec())
-    // }
+    pub fn get_body(&mut self, req: &Request) -> Result<String> {
+        self.stream.write_all(&req.msg())?;
+        self.stream.flush()?;
+        let mut response = vec![];
+        self.stream.read_to_end(&mut response)?;
+        String::from_utf8(response).map_err(Error::FromUtf8)
+    }
 }
-
-// pub fn get(proxy: &str, target: &str) -> io::Result<Vec<u8>> {
-//     let mut stream = SocksStream::connect(proxy, target)?;
-//     let request = format!(
-//         "GET {} HTTP/1.0\r\nHost: {}\r\n\r\n",
-//         stream.target.path(),
-//         stream.target.host()?
-//     )
-//     .into_bytes();
-//     stream.write_all(&request)?;
-//     stream.flush()?;
-//     let mut response = vec![];
-//     stream.read_to_end(&mut response)?;
-//     let pos = response
-//         .windows(4)
-//         .position(|x| x == b"\r\n\r\n")
-//         .ok_or_else(|| Error::WrongHttp)?;
-//     let body = &response[pos + 4..response.len()];
-//     Ok(body.to_vec())
-// }
-
-// pub fn post_json(proxy: &str, target: &str, body: &str) -> io::Result<Vec<u8>> {
-//     let mut stream = SocksStream::connect(proxy, target)?;
-//     let body = if !body.is_empty() {
-//         format!("Content-Length: {}\r\n\r\n{}", body.len(), body)
-//     } else {
-//         String::new()
-//     };
-//     let request = format!(
-//         "POST {} HTTP/1.0\r\nHost: {}\r\nContent-Type: application/json\r\n{}\r\n",
-//         stream.target.path(),
-//         stream.target.host()?,
-//         body
-//     )
-//     .into_bytes();
-//     stream.write_all(&request)?;
-//     stream.flush()?;
-//     let mut response = vec![];
-//     stream.read_to_end(&mut response)?;
-//     let pos = response
-//         .windows(4)
-//         .position(|x| x == b"\r\n\r\n")
-//         .ok_or_else(|| Error::WrongHttp)?;
-//     let body = &response[pos + 4..response.len()];
-//     Ok(body.to_vec())
-// }
-
-// impl Read for SocksStream {
-//     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-//         self.stream.read(buf)
-//     }
-// }
-
-// impl Write for SocksStream {
-//     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-//         self.stream.write(buf)
-//     }
-
-//     fn flush(&mut self) -> io::Result<()> {
-//         self.stream.flush()
-//     }
-// }
 
 // #[cfg(test)]
 // mod tests {
