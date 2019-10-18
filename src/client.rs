@@ -101,8 +101,8 @@ impl Client {
 
     pub fn send_request(&mut self) -> Result<()> {
         match self.transport {
-            Transport::Proxy(ref mut proxy) => proxy.send_request(&self.request),
-            Transport::Stream(ref mut stream) => stream.send_request(&self.request),
+            Transport::Proxy(ref mut proxy) => proxy.send_request(&self.request.msg()),
+            Transport::Stream(ref mut stream) => stream.send_request(&self.request.msg()),
             Transport::None => Err(Error::WrongHttp),
         }
     }

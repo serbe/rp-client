@@ -3,7 +3,6 @@ use std::net::{Ipv4Addr, Ipv6Addr, TcpStream};
 
 use crate::addr::Addr;
 use crate::error::{Error, Result};
-use crate::request::Request;
 use crate::response::Response;
 use crate::stream::Stream;
 use crate::uri::Uri;
@@ -239,8 +238,8 @@ impl SocksStream {
         })
     }
 
-    pub fn send_request(&mut self, req: &Request) -> Result<()> {
-        Stream::send_msg(&mut self.stream, &req.msg())
+    pub fn send_request(&mut self, req: &[u8]) -> Result<()> {
+        Stream::send_msg(&mut self.stream, req)
     }
 
     pub fn get_response(&mut self) -> Result<Response> {
@@ -252,36 +251,34 @@ impl SocksStream {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     lazy_static! {
-//         static ref IP: String = crate::my_ip();
-//     }
+    #[test]
+    fn socks() {
+        let mut client = SocksStream::connect(&"http://127.0.0.1:5959".parse::<Uri>().unwrap(), &"http://api.ipify.org".parse::<Uri>().unwrap()).unwrap();
+        client.send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n").unwrap();
+        let response = client.get_response().unwrap();
+        let body = client.get_body(response.content_len().unwrap()).unwrap();
+        let body = String::from_utf8(body).unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
 
-//     #[test]
-//     fn socks() {
-//         let mut client = SocksStream::connect("127.0.0.1:5959", "https://api.ipify.org").unwrap();
-//         let body = client.get().unwrap();
-//         let txt = String::from_utf8_lossy(&body);
-//         assert!(txt.contains(crate::tests::IP.as_str()));
-//     }
+    // #[test]
+    // fn socks_auth() {
+    //     let mut client =
+    //         SocksStream::connect_plain("127.0.0.1:5757", "https://api.ipify.org", "test", "tset")
+    //             .unwrap();
+    //     let body = client.get().unwrap();
+    //     let txt = String::from_utf8_lossy(&body);
+    //     assert!(txt.contains(crate::tests::IP.as_str()));
+    // }
 
-//     #[test]
-//     fn socks_auth() {
-//         let mut client =
-//             SocksStream::connect_plain("127.0.0.1:5757", "https://api.ipify.org", "test", "tset")
-//                 .unwrap();
-//         let body = client.get().unwrap();
-//         let txt = String::from_utf8_lossy(&body);
-//         assert!(txt.contains(crate::tests::IP.as_str()));
-//     }
-
-//     #[test]
-//     fn socks_bad_auth() {
-//         let client =
-//             SocksStream::connect_plain("127.0.0.1:5757", "https://api.ipify.org", "test", "test");
-//         assert!(client.is_err());
-//     }
-// }
+    // #[test]
+    // fn socks_bad_auth() {
+    //     let client =
+    //         SocksStream::connect_plain("127.0.0.1:5757", "https://api.ipify.org", "test", "test");
+    //     assert!(client.is_err());
+    // }
+}

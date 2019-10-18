@@ -1,6 +1,5 @@
 use crate::error::{Error, Result};
 use crate::http::HttpStream;
-use crate::request::Request;
 use crate::response::Response;
 use crate::socks::SocksStream;
 use crate::uri::Uri;
@@ -57,7 +56,7 @@ impl Proxy {
         }))
     }
 
-    pub fn send_request(&mut self, req: &Request) -> Result<()> {
+    pub fn send_request(&mut self, req: &[u8]) -> Result<()> {
         match self {
             Proxy::Http(http_proxy) => http_proxy.stream.send_request(req),
             Proxy::Https(http_proxy) => http_proxy.stream.send_request(req),
