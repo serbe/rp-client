@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 native-tls = "0.2"
+base64 = "0.10"
 
 [dev-dependencies]
 lazy_static = "1.4"

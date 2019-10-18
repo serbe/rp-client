@@ -2,6 +2,8 @@ use std::fmt;
 use std::ops::Range;
 use std::str::FromStr;
 
+use base64::encode;
+
 use crate::error::{Error, Result};
 use crate::range::{get_chunks, RangeUsize};
 
@@ -39,6 +41,13 @@ impl Authority {
         match &self.port {
             Some(p) => Some(self.inner[*p].parse().unwrap()),
             None => None,
+        }
+    }
+
+    pub fn base64_auth(&self) -> Option<String> {
+        match (self.username(), self.password()) {
+            (Some(user), Some(pass)) => Some(encode(&format!("{}:{}", user, pass))),
+            _ => None,
         }
     }
 }

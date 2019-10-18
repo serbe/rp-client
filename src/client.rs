@@ -57,7 +57,11 @@ impl Client {
     }
 
     pub fn proxy<U: IntoUri>(&mut self, uri: U) -> Result<&mut Self> {
-        self.proxy = Some(uri.into_uri()?.check_supported_proxy()?);
+        let uri = uri.into_uri()?;
+        if let Some(auth) = &uri.base64_auth() {
+            self.header("Proxy-Authorization", &format!("Basic {}", auth));
+        };
+        self.proxy = Some(uri.check_supported_proxy()?);
         Ok(self)
     }
 

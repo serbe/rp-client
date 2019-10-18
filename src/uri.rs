@@ -174,8 +174,20 @@ impl Uri {
         }
     }
 
+    pub fn authority(&self) -> Authority {
+        self.authority.clone()
+    }
+
     pub fn addr(&self) -> Addr {
         self.addr.clone()
+    }
+
+    pub fn base64_auth(&self) -> Option<String> {
+        if self.scheme() == "http" || self.scheme() == "https" {
+            self.authority.base64_auth()
+        } else {
+            None
+        }
     }
 }
 

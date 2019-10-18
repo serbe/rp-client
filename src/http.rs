@@ -48,8 +48,11 @@ mod tests {
 
     #[test]
     fn http() {
-        let mut client = HttpStream::connect(&"http://api.ipify.org".parse::<Uri>().unwrap()).unwrap();
-        client.send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n").unwrap();
+        let mut client =
+            HttpStream::connect(&"http://api.ipify.org".parse::<Uri>().unwrap()).unwrap();
+        client
+            .send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n")
+            .unwrap();
         let response = client.get_response().unwrap();
         let body = client.get_body(response.content_len().unwrap()).unwrap();
         let body = String::from_utf8(body).unwrap();
@@ -58,8 +61,11 @@ mod tests {
 
     #[test]
     fn https() {
-        let mut client = HttpStream::connect(&"https://api.ipify.org".parse::<Uri>().unwrap()).unwrap();
-        client.send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n").unwrap();
+        let mut client =
+            HttpStream::connect(&"https://api.ipify.org".parse::<Uri>().unwrap()).unwrap();
+        client
+            .send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n")
+            .unwrap();
         let response = client.get_response().unwrap();
         let body = client.get_body(response.content_len().unwrap()).unwrap();
         let body = String::from_utf8(body).unwrap();
@@ -68,11 +74,28 @@ mod tests {
 
     #[test]
     fn http_proxy() {
-        let mut client = HttpStream::connect_proxy(&"http://127.0.0.1:5858".parse::<Uri>().unwrap()).unwrap();
-        client.send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n").unwrap();
+        let mut client =
+            HttpStream::connect_proxy(&"http://127.0.0.1:5858".parse::<Uri>().unwrap()).unwrap();
+        client
+            .send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n")
+            .unwrap();
         let response = client.get_response().unwrap();
         let body = client.get_body(response.content_len().unwrap()).unwrap();
         let body = String::from_utf8(body).unwrap();
         assert!(&body.contains(crate::tests::IP.as_str()));
     }
+
+    // #[test]
+    // fn http_proxy_auth() {
+    //     let mut client =
+    //         HttpStream::connect_proxy(&"http://test:tset@127.0.0.1:5656".parse::<Uri>().unwrap()).unwrap();
+    //     client
+    //         .send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n")
+    //         .unwrap();
+    //     let response = client.get_response().unwrap();
+    //     let body = client.get_body(response.content_len().unwrap()).unwrap();
+    //     let body = String::from_utf8(body).unwrap();
+    //     println!("{:?}", body);
+    //     assert!(&body.contains(crate::tests::IP.as_str()));
+    // }
 }
