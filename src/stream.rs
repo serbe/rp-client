@@ -35,10 +35,9 @@ impl Stream {
     }
 
     pub fn get_body(stream: &mut Stream, content_len: usize) -> Result<Vec<u8>> {
-        let mut response = Vec::with_capacity(content_len);
-        stream.read_exact(&mut response)?;
-        // Ok(String::from_utf8_lossy(&response).to_string())
-        Ok(response)
+        let mut body = Vec::with_capacity(200);
+        copy_until_len(stream, &mut body, content_len)?;
+        Ok(body)
     }
 }
 
@@ -83,6 +82,32 @@ where
         read += 1;
 
         if &buf[(buf.len() - val.len())..] == val {
+            break;
+        }
+    }
+
+    writer.write_all(&buf)?;
+    writer.flush()?;
+
+    Ok(read)
+}
+
+pub fn copy_until_len<R, W>(reader: &mut R, writer: &mut W, len: usize) -> Result<usize>
+where
+    R: Read + ?Sized,
+    W: Write + ?Sized,
+{
+    let mut buf = Vec::with_capacity(len);
+
+    let mut pre_buf = [0; 10];
+    let mut read = reader.read(&mut pre_buf)?;
+    buf.extend(&pre_buf[..read]);
+
+    for (i, byte) in reader.bytes().enumerate() {
+        buf.push(byte?);
+        read += 1;
+
+        if i == len {
             break;
         }
     }
