@@ -36,7 +36,6 @@ impl Headers {
         let mut headers = Headers::with_capacity(4);
 
         headers.insert("Host", host);
-        // headers.insert("Referer", &uri);
         headers.insert("Connection", "Close");
 
         headers
