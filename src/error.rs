@@ -4,6 +4,7 @@ pub type Result<T> = result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
+    EmptyUri,
     EmptyScheme,
     EmptyResponse,
     EmptyAuthority,
@@ -52,6 +53,7 @@ impl fmt::Display for Error {
         use self::Error::*;
 
         match self {
+            EmptyUri => write!(w, "empty Uri"),
             EmptyScheme => write!(w, "Uri no have scheme"),
             EmptyResponse => write!(w, "empty response"),
             EmptyAuthority => write!(w, "Uri no have authority"),
@@ -102,6 +104,7 @@ impl error::Error for Error {
         use self::Error::*;
 
         match self {
+            EmptyUri => "empty Uri",
             EmptyScheme => "Uri no have scheme",
             EmptyResponse => "empty response",
             EmptyAuthority => "Uri no have authority",
@@ -150,6 +153,7 @@ impl error::Error for Error {
         use self::Error::*;
 
         match self {
+            EmptyUri => None,
             EmptyScheme => None,
             EmptyResponse => None,
             EmptyAuthority => None,

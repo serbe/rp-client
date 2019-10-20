@@ -1,5 +1,5 @@
+use crate::client_builder::ClientBuilder;
 use crate::error::{Error, Result};
-use crate::method::Method;
 use crate::request::Request;
 use crate::response::Response;
 use crate::transport::Transport;
@@ -9,98 +9,35 @@ use crate::uri::{IntoUri, Uri};
 pub struct Client {
     request: Request,
     uri: Uri,
-    proxy: Option<Uri>,
     transport: Transport,
     response: Option<Response>,
 }
 
 impl Client {
-    pub fn new<U: IntoUri>(uri: U) -> Result<Self> {
-        let uri = uri.into_uri()?;
-        Ok(Client {
-            request: Request::new(&uri),
+    pub fn new<U: IntoUri>(uri: U) -> ClientBuilder {
+        ClientBuilder::new().uri(uri)
+    }
+
+    pub fn builder() -> ClientBuilder {
+        ClientBuilder::new()
+    }
+
+    pub fn from(
+        request: Request,
+        uri: Uri,
+        transport: Transport,
+        response: Option<Response>,
+    ) -> Client {
+        Client {
+            request,
             uri,
-            proxy: None,
-            transport: Transport::new(),
-            response: None,
-        })
-    }
-
-    pub fn get(&mut self) -> &mut Self {
-        self.request.method(Method::GET);
-        self
-    }
-
-    pub fn post(&mut self) -> &mut Self {
-        self.request.method(Method::POST);
-        self
-    }
-
-    pub fn put(&mut self) -> &mut Self {
-        self.request.method(Method::PUT);
-        self
-    }
-
-    pub fn patch(&mut self) -> &mut Self {
-        self.request.method(Method::PATCH);
-        self
-    }
-
-    pub fn delete(&mut self) -> &mut Self {
-        self.request.method(Method::DELETE);
-        self
-    }
-
-    pub fn head(&mut self) -> &mut Self {
-        self.request.method(Method::HEAD);
-        self
-    }
-
-    pub fn proxy<U: IntoUri>(&mut self, uri: U) -> Result<&mut Self> {
-        let uri = uri.into_uri()?;
-        if let Some(auth) = &uri.base64_auth() {
-            self.header("Proxy-Authorization", &format!("Basic {}", auth));
-        };
-        self.proxy = Some(uri.check_supported_proxy()?);
-        Ok(self)
-    }
-
-    pub fn header<T, U>(&mut self, key: &T, val: &U) -> &mut Self
-    where
-        T: ToString + ?Sized,
-        U: ToString + ?Sized,
-    {
-        self.request.header(key, val);
-        self
-    }
-
-    pub fn body(&mut self, body: &[u8]) -> &mut Self {
-        self.request.body(body.to_vec());
-        self
-    }
-
-    // pub fn http_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-    //     self.transport = Transport::proxy_http(&uri.into_uri()?)?;
-    //     Ok(())
-    // }
-
-    // pub fn htts_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-    //     self.transport = Transport::proxy_https(&uri.into_uri()?)?;
-    //     Ok(())
-    // }
-
-    // pub fn socks_proxy<U: IntoUri>(&mut self, uri: U) -> Result<()> {
-    //     self.transport = Transport::proxy_socks(&uri.into_uri()?)?;
-    //     Ok(())
-    // }
-
-    pub fn connect(&mut self) -> Result<&mut Self> {
-        if let Some(ref proxy) = self.proxy {
-            self.transport = Transport::proxy(&self.uri, proxy)?;
-        } else {
-            self.transport = Transport::stream(&self.uri)?;
+            transport,
+            response,
         }
-        Ok(self)
+    }
+
+    pub fn request(&self) -> Request {
+        self.request.clone()
     }
 
     pub fn send_request(&mut self) -> Result<()> {
@@ -112,7 +49,6 @@ impl Client {
     }
 
     pub fn send(&mut self) -> Result<Response> {
-        self.connect()?;
         self.send_request()?;
         let response = match self.transport {
             Transport::Proxy(ref mut proxy) => proxy.get_response(),
@@ -144,4 +80,93 @@ impl Client {
         let body = self.get_body()?;
         Ok(String::from_utf8_lossy(&body).to_string())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn client_http() {
+        let mut client = Client::new("http://api.ipify.org").build().unwrap();
+        let response = client.send().unwrap();
+        assert!(response.status_code().is_success());
+        let body = client.text().unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
+
+    #[test]
+    fn client_https() {
+        let mut client = Client::new("https://api.ipify.org").build().unwrap();
+        let response = client.send().unwrap();
+        assert!(response.status_code().is_success());
+        let body = client.text().unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
+
+    #[test]
+    fn client_http_proxy() {
+        let mut client = Client::new("http://api.ipify.org")
+            .proxy("http://127.0.0.1:5858")
+            .build()
+            .unwrap();
+        let response = client.send().unwrap();
+        assert!(response.status_code().is_success());
+        let body = client.text().unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
+
+    #[test]
+    fn client_http_proxy_auth() {
+        let mut client = Client::new("http://api.ipify.org")
+            .proxy("http://test:tset@127.0.0.1:5656")
+            .build()
+            .unwrap();
+        let response = client.send().unwrap();
+        assert!(response.status_code().is_success());
+        let body = client.text().unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
+
+    // #[test]
+    // fn client_http_proxy_auth_err() {
+    //     let mut client = Client::new("http://api.ipify.org").unwrap();
+    //     client.proxy("http://test:test@127.0.0.1:5656").unwrap();
+    //     let response = client.send().unwrap();
+    //     println!("{:?}", response);
+    //     assert!(!response.status_code().is_success());
+    // }
+
+    #[test]
+    fn client_socks_proxy() {
+        let mut client = Client::new("http://api.ipify.org")
+            .proxy("socks5://127.0.0.1:5959")
+            .build()
+            .unwrap();
+        let response = client.send().unwrap();
+        assert!(response.status_code().is_success());
+        let body = client.text().unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
+
+    #[test]
+    fn client_socks_proxy_auth() {
+        let mut client = Client::new("http://api.ipify.org")
+            .proxy("socks5://test:tset@127.0.0.1:5757")
+            .build()
+            .unwrap();
+        let response = client.send().unwrap();
+        assert!(response.status_code().is_success());
+        let body = client.text().unwrap();
+        assert!(&body.contains(crate::tests::IP.as_str()));
+    }
+
+    // #[test]
+    // fn client_socks_proxy_auth_err() {
+    //     let mut client = Client::new("http://api.ipify.org").unwrap();
+    //     client.proxy("socks5://test:test@127.0.0.1:5757").unwrap();
+    //     client.connect().unwrap();
+    //     println!("{:?}", client);
+    //     // assert!(res.is_err());
+    // }
 }

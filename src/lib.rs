@@ -1,6 +1,7 @@
 pub mod addr;
 pub mod authority;
 pub mod client;
+pub mod client_builder;
 pub mod error;
 pub mod headers;
 pub mod http;
