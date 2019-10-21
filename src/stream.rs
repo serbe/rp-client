@@ -107,7 +107,7 @@ where
         buf.push(byte?);
         read += 1;
 
-        if i == len {
+        if i == len + 1 {
             break;
         }
     }

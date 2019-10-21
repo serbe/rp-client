@@ -77,7 +77,7 @@ mod tests {
         let mut client =
             HttpStream::connect_proxy(&"http://127.0.0.1:5858".parse::<Uri>().unwrap()).unwrap();
         client
-            .send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n")
+            .send_request(b"GET http://api.ipify.org/ HTTP/1.0\r\nHost: api.ipify.org\r\n\r\n")
             .unwrap();
         let response = client.get_response().unwrap();
         let body = client.get_body(response.content_len().unwrap()).unwrap();
@@ -91,7 +91,7 @@ mod tests {
             HttpStream::connect_proxy(&"http://test:tset@127.0.0.1:5656".parse::<Uri>().unwrap())
                 .unwrap();
         client
-            .send_request(b"GET / HTTP/1.0\r\nHost: api.ipify.org\r\nProxy-Authorization: Basic dGVzdDp0c2V0\r\n\r\n")
+            .send_request(b"GET http://api.ipify.org/ HTTP/1.0\r\nHost: api.ipify.org\r\nProxy-Authorization: Basic dGVzdDp0c2V0\r\n\r\n")
             .unwrap();
         let response = client.get_response().unwrap();
         let body = client.get_body(response.content_len().unwrap()).unwrap();
