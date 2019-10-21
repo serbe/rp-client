@@ -2,10 +2,12 @@ use std::collections::{hash_map, HashMap};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+use unicase::Ascii;
+
 use crate::error::{Error, Result};
 
 #[derive(Debug, PartialEq, Clone, Default)]
-pub struct Headers(HashMap<String, String>);
+pub struct Headers(HashMap<Ascii<String>, String>);
 
 impl Headers {
     pub fn new() -> Headers {
@@ -16,12 +18,12 @@ impl Headers {
         Headers(HashMap::with_capacity(capacity))
     }
 
-    pub fn iter(&self) -> hash_map::Iter<String, String> {
+    pub fn iter(&self) -> hash_map::Iter<Ascii<String>, String> {
         self.0.iter()
     }
 
     pub fn get<T: ToString + ?Sized>(&self, k: &T) -> Option<&String> {
-        self.0.get(&k.to_string())
+        self.0.get(&Ascii::new(k.to_string()))
     }
 
     pub fn insert<T, U>(&mut self, key: &T, val: &U) -> Option<String>
@@ -29,7 +31,7 @@ impl Headers {
         T: ToString + ?Sized,
         U: ToString + ?Sized,
     {
-        self.0.insert(key.to_string(), val.to_string())
+        self.0.insert(Ascii::new(key.to_string()), val.to_string())
     }
 
     pub fn default_http(host: &str) -> Headers {
@@ -54,7 +56,7 @@ impl FromStr for Headers {
                 .map(|elem| {
                     let idx = elem.find(':').unwrap();
                     let (key, value) = elem.split_at(idx);
-                    (key.to_string(), value[1..].trim().to_string())
+                    (Ascii::new(key.to_string()), value[1..].trim().to_string())
                 })
                 .collect();
 
@@ -65,14 +67,14 @@ impl FromStr for Headers {
     }
 }
 
-impl From<HashMap<String, String>> for Headers {
-    fn from(map: HashMap<String, String>) -> Headers {
+impl From<HashMap<Ascii<String>, String>> for Headers {
+    fn from(map: HashMap<Ascii<String>, String>) -> Headers {
         Headers(map)
     }
 }
 
-impl From<Headers> for HashMap<String, String> {
-    fn from(map: Headers) -> HashMap<String, String> {
+impl From<Headers> for HashMap<Ascii<String>, String> {
+    fn from(map: Headers) -> HashMap<Ascii<String>, String> {
         map.0
     }
 }
