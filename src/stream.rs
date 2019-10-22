@@ -34,9 +34,11 @@ impl Stream {
         Response::from_head(&head)
     }
 
-    pub fn get_body(stream: &mut Stream, content_len: usize) -> Result<Vec<u8>> {
-        let mut body = Vec::with_capacity(200);
-        copy_until_len(stream, &mut body, content_len)?;
+    pub fn get_body(stream: &mut Stream, _content_len: usize) -> Result<Vec<u8>> {
+        // let mut body = Vec::with_capacity(200);
+        // copy_until_len(stream, &mut body, content_len)?;
+        let mut body = Vec::new();
+        stream.read_to_end(&mut body)?;
         Ok(body)
     }
 }
