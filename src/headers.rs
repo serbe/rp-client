@@ -21,14 +21,14 @@ impl Headers {
     }
 
     pub fn get<T: ToString + ?Sized>(&self, k: &T) -> Option<&String> {
-        self.0.get(&k.to_string())
+        self.0.get(&k.to_string().to_lowercase())
     }
 
-    pub fn insert<T, U>(&mut self, key: &T, val: &U) -> Option<String>
-    where
-        T: ToString + ?Sized,
-        U: ToString + ?Sized,
-    {
+    pub fn insert<T: ToString + ?Sized, U: ToString + ?Sized>(
+        &mut self,
+        key: &T,
+        val: &U,
+    ) -> Option<String> {
         self.0
             .insert(key.to_string().to_lowercase(), val.to_string())
     }

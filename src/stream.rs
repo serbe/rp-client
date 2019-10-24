@@ -34,11 +34,9 @@ impl Stream {
         Response::from_head(&head)
     }
 
-    pub fn get_body(stream: &mut Stream, _content_len: usize) -> Result<Vec<u8>> {
-        // let mut body = Vec::with_capacity(200);
-        // copy_until_len(stream, &mut body, content_len)?;
-        let mut body = Vec::new();
-        stream.read_to_end(&mut body)?;
+    pub fn get_body(stream: &mut Stream, content_len: usize) -> Result<Vec<u8>> {
+        let mut body = vec![0u8; content_len];
+        stream.read_exact(&mut body)?;
         Ok(body)
     }
 }
@@ -94,28 +92,28 @@ where
     Ok(read)
 }
 
-pub fn copy_until_len<R, W>(reader: &mut R, writer: &mut W, len: usize) -> Result<usize>
-where
-    R: Read + ?Sized,
-    W: Write + ?Sized,
-{
-    let mut buf = Vec::with_capacity(len);
+// pub fn copy_until_len<R, W>(reader: &mut R, writer: &mut W, len: usize) -> Result<usize>
+// where
+//     R: Read + ?Sized,
+//     W: Write + ?Sized,
+// {
+//     let mut buf = Vec::with_capacity(len);
 
-    let mut pre_buf = [0; 10];
-    let mut read = reader.read(&mut pre_buf)?;
-    buf.extend(&pre_buf[..read]);
+//     let mut pre_buf = [0; 10];
+//     let mut read = reader.read(&mut pre_buf)?;
+//     buf.extend(&pre_buf[..read]);
 
-    for (i, byte) in reader.bytes().enumerate() {
-        buf.push(byte?);
-        read += 1;
+//     for (i, byte) in reader.bytes().enumerate() {
+//         buf.push(byte?);
+//         read += 1;
 
-        if i == len + 1 {
-            break;
-        }
-    }
+//         if i == len + 1 {
+//             break;
+//         }
+//     }
 
-    writer.write_all(&buf)?;
-    writer.flush()?;
+//     writer.write_all(&buf)?;
+//     writer.flush()?;
 
-    Ok(read)
-}
+//     Ok(read)
+// }
