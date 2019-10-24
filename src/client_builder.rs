@@ -58,19 +58,17 @@ impl ClientBuilder {
     }
 
     pub fn uri<T: IntoUri>(mut self, uri: T) -> ClientBuilder {
-        if let Ok(uri) = uri.into_uri() {
-            self.uri = Some(uri);
-        } else {
-            self.uri = None;
+        match uri.into_uri() {
+            Ok(uri) => self.uri = Some(uri),
+            _ => self.uri = None,
         }
         self
     }
 
     pub fn proxy<T: IntoUri>(mut self, proxy: T) -> ClientBuilder {
-        if let Ok(uri) = proxy.into_uri() {
-            self.proxy = Some(uri);
-        } else {
-            self.proxy = None;
+        match proxy.into_uri() {
+            Ok(uri) => self.proxy = Some(uri),
+            _ => self.proxy = None,
         }
         self
     }

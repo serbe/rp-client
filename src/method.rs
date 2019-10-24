@@ -5,15 +5,15 @@ use crate::error::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub enum Method {
-    OPTIONS,
+    CONNECT,
+    DELETE,
     GET,
+    HEAD,
+    OPTIONS,
+    PATCH,
     POST,
     PUT,
-    DELETE,
-    HEAD,
     TRACE,
-    CONNECT,
-    PATCH,
 }
 
 pub trait IntoMethod {
@@ -41,15 +41,15 @@ impl IntoMethod for String {
 impl Method {
     pub fn as_str(&self) -> &str {
         match self {
-            Method::OPTIONS => "OPTIONS",
+            Method::CONNECT => "CONNECT",
+            Method::DELETE => "DELETE",
             Method::GET => "GET",
+            Method::HEAD => "HEAD",
+            Method::OPTIONS => "OPTIONS",
+            Method::PATCH => "PATCH",
             Method::POST => "POST",
             Method::PUT => "PUT",
-            Method::DELETE => "DELETE",
-            Method::HEAD => "HEAD",
             Method::TRACE => "TRACE",
-            Method::CONNECT => "CONNECT",
-            Method::PATCH => "PATCH",
         }
     }
 }
@@ -65,15 +65,15 @@ impl FromStr for Method {
 
     fn from_str(s: &str) -> Result<Self> {
         match s.to_ascii_uppercase().as_str() {
-            "OPTIONS" => Ok(Method::OPTIONS),
+            "CONNECT" => Ok(Method::CONNECT),
+            "DELETE" => Ok(Method::DELETE),
             "GET" => Ok(Method::GET),
+            "HEAD" => Ok(Method::HEAD),
+            "OPTIONS" => Ok(Method::OPTIONS),
+            "PATCH" => Ok(Method::PATCH),
             "POST" => Ok(Method::POST),
             "PUT" => Ok(Method::PUT),
-            "DELETE" => Ok(Method::DELETE),
-            "HEAD" => Ok(Method::HEAD),
             "TRACE" => Ok(Method::TRACE),
-            "CONNECT" => Ok(Method::CONNECT),
-            "PATCH" => Ok(Method::PATCH),
             _ => Err(Error::UnknownMethod(s.to_owned())),
         }
     }
@@ -82,15 +82,15 @@ impl FromStr for Method {
 impl fmt::Display for Method {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let method = match self {
+            Method::CONNECT => "CONNECT",
+            Method::DELETE => "DELETE",
             Method::GET => "GET",
             Method::HEAD => "HEAD",
-            Method::POST => "POST",
-            Method::PUT => "PUT",
-            Method::DELETE => "DELETE",
             Method::OPTIONS => "OPTIONS",
             Method::PATCH => "PATCH",
+            Method::POST => "POST",
+            Method::PUT => "PUT",
             Method::TRACE => "TRACE",
-            Method::CONNECT => "CONNECT",
         };
         write!(f, "{}", method)
     }
