@@ -20,8 +20,11 @@ impl Headers {
         self.0.iter()
     }
 
-    pub fn get<T: ToString + ?Sized>(&self, k: &T) -> Option<&String> {
-        self.0.get(&k.to_string().to_lowercase())
+    pub fn get<T: ToString + ?Sized>(&self, k: &T) -> Option<String> {
+        match self.0.get(&k.to_string().to_lowercase()) {
+            Some(value) => Some(value.to_string()),
+            None => None,
+        }
     }
 
     pub fn insert<T: ToString + ?Sized, U: ToString + ?Sized>(
@@ -34,11 +37,9 @@ impl Headers {
     }
 
     pub fn default_http(host: &str) -> Headers {
-        let mut headers = Headers::with_capacity(4);
-
+        let mut headers = Headers::with_capacity(2);
         headers.insert("Host", host);
         headers.insert("Connection", "Close");
-
         headers
     }
 }
