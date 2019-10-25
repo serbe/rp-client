@@ -97,7 +97,7 @@ impl Uri {
         self.fragment.map(|r| &self.inner[r])
     }
 
-    pub fn resource(&self) -> &str {
+    pub fn request_uri(&self) -> &str {
         let mut result = "/";
 
         for v in &[self.path, self.query, self.fragment] {
@@ -108,6 +108,19 @@ impl Uri {
         }
 
         result
+    }
+
+    pub fn proxy_request_uri(&self) -> String {
+        let mut result = "/";
+
+        for v in &[self.path, self.query, self.fragment] {
+            if let Some(r) = v {
+                result = &self.inner[r.start..];
+                break;
+            }
+        }
+
+        format!("{}://{}{}", self.scheme(), self.host_port(), result)
     }
 
     pub fn origin(&self) -> String {
@@ -280,6 +293,22 @@ mod tests {
     fn case_uri() {
         let uri = "hTtP://www.example.org".parse::<Uri>().unwrap();
         assert_eq!(uri.as_str(), "http://www.example.org");
+    }
+
+    #[test]
+    fn request_uri() {
+        let uri = "http://rest.rsc.io/foo%2fbar/baz%2Fquux?alt=media"
+            .parse::<Uri>()
+            .unwrap();
+        assert_eq!(uri.request_uri(), "/foo%2fbar/baz%2Fquux?alt=media");
+    }
+
+    #[test]
+    fn proxy_request_uri() {
+        let uri = "http://rest.rsc.io/foo%2fbar/baz%2Fquux?alt=media"
+            .parse::<Uri>()
+            .unwrap();
+        assert_eq!(uri.request_uri(), "/foo%2fbar/baz%2Fquux?alt=media");
     }
 
     #[test]

@@ -5,22 +5,41 @@ use crate::version::Version;
 
 #[derive(Clone, Debug)]
 pub struct Request {
-    resource: String,
-    headers: Headers,
     method: Method,
+    request_uri: String,
     version: Version,
+    headers: Headers,
+    host: String,
+    content_len: usize,
     body: Option<Vec<u8>>,
+    using_proxy: bool,
 }
 
 impl Request {
-    pub fn new(uri: &Uri) -> Request {
+    pub fn new(uri: &Uri, using_proxy: bool) -> Request {
+        let request_uri = if using_proxy {
+            uri.request_uri().to_string()
+        } else {
+            uri.proxy_request_uri()
+        };
         Request {
-            headers: Headers::default_http(&uri.host_header()),
-            resource: uri.resource().to_string(),
             method: Method::GET,
+            request_uri,
             version: Version::Http11,
+            headers: Headers::default_http(&uri.host_header()),
+            host: uri.host_port(),
+            content_len: 0,
             body: None,
+            using_proxy,
         }
+    }
+
+    pub fn user_agent(&self) -> Option<String> {
+        self.headers.get("User-Agent")
+    }
+
+    pub fn refferer(&self) -> Option<String> {
+        self.headers.get("Referer")
     }
 
     pub fn headers(&mut self, headers: Headers) -> &mut Self {
@@ -57,7 +76,7 @@ impl Request {
     pub fn msg(&self) -> Vec<u8> {
         let request_line = format!(
             "{} {} {}{}",
-            self.method, self.resource, self.version, "\r\n"
+            self.method, self.request_uri, self.version, "\r\n"
         );
 
         let headers: String = self

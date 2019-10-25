@@ -24,9 +24,7 @@ pub struct ClientBuilder {
 
 impl ClientBuilder {
     pub fn new() -> Self {
-        let mut headers = Headers::with_capacity(2);
-        headers.insert("user-agent", "rp-client 0.x");
-        headers.insert("accept", "*/*");
+        let headers = Headers::new();
         ClientBuilder {
             uri: None,
             headers,
@@ -43,12 +41,12 @@ impl ClientBuilder {
 
     pub fn build(self) -> Result<Client> {
         let uri = self.uri.ok_or(Error::EmptyUri)?;
-        let transport = if let Some(proxy) = self.proxy {
+        let transport = if let Some(proxy) = &self.proxy {
             Transport::proxy(&uri, &proxy)?
         } else {
             Transport::stream(&uri)?
         };
-        let mut request = Request::new(&uri);
+        let mut request = Request::new(&uri, self.proxy.is_some());
         request.method(self.method);
         request.headers(self.headers);
         request.version(self.version);
