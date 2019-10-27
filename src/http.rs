@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn http_stream_http_proxy_auth() {
+    fn http_stream_auth_http_proxy() {
         let mut client =
             HttpStream::connect_proxy(&"http://test:tset@127.0.0.1:5656".parse::<Uri>().unwrap())
                 .unwrap();
