@@ -32,7 +32,7 @@ impl IntoUri for String {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Uri {
     inner: String,
     scheme: RangeUsize,
@@ -205,6 +205,16 @@ impl Uri {
 }
 
 impl fmt::Display for Uri {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut uri = self.inner.to_string();
+        let auth = self.authority.to_string();
+        let start = self.scheme.end + 3;
+        uri.replace_range(start..(start + auth.len()), &auth);
+        write!(f, "{}", uri)
+    }
+}
+
+impl fmt::Debug for Uri {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut uri = self.inner.to_string();
         let auth = self.authority.to_string();

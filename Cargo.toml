@@ -1,6 +1,6 @@
 [package]
 name = "rp_client"
-version = "0.3.8"
+version = "0.3.9"
 authors = ["Valeriy Kostikov <mkoctuk@gmail.com>"]
 edition = "2018"
 
