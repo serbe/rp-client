@@ -9,6 +9,7 @@ use crate::transport::Transport;
 use crate::uri::{IntoUri, Uri};
 use crate::version::{IntoVersion, Version};
 
+#[derive(Debug)]
 pub struct ClientBuilder {
     uri: Option<Uri>,
     headers: Headers,
