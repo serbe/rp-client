@@ -3,6 +3,8 @@ use crate::method::Method;
 use crate::uri::Uri;
 use crate::version::Version;
 
+use base64::encode;
+
 #[derive(Clone, Debug)]
 pub struct Request {
     method: Method,
@@ -70,6 +72,11 @@ impl Request {
 
     pub fn body(&mut self, body: Option<Vec<u8>>) -> &mut Self {
         self.body = body;
+        self
+    }
+
+    fn set_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
+	    self.header("Authorization", &format!("Basic {}", encode(&format!("{}:{}", username, password))));
         self
     }
 
