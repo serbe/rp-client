@@ -32,6 +32,12 @@ impl IntoUri for String {
     }
 }
 
+impl IntoUri for &String {
+    fn into_uri(self) -> Result<Uri> {
+        self.parse()
+    }
+}
+
 #[derive(Clone, PartialEq)]
 pub struct Uri {
     inner: String,
