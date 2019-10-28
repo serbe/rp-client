@@ -128,14 +128,12 @@ mod tests {
         assert!(&body.contains(crate::tests::IP.as_str()));
     }
 
-    // #[test]
-    // fn client_http_proxy_auth_err() {
-    //     let mut client = Client::new("http://api.ipify.org").unwrap();
-    //     client.proxy("http://test:test@127.0.0.1:5656").unwrap();
-    //     let response = client.send().unwrap();
-    //     println!("{:?}", response);
-    //     assert!(!response.status_code().is_success());
-    // }
+    #[test]
+    fn client_http_proxy_auth_err() {
+        let mut client = Client::new("http://api.ipify.org").proxy("http://test:test@127.0.0.1:5656").build().unwrap();
+        let response = client.send().unwrap();
+        assert!(!response.status_code().is_success());
+    }
 
     #[test]
     fn client_socks_proxy() {
@@ -161,12 +159,9 @@ mod tests {
         assert!(&body.contains(crate::tests::IP.as_str()));
     }
 
-    // #[test]
-    // fn client_socks_proxy_auth_err() {
-    //     let mut client = Client::new("http://api.ipify.org").unwrap();
-    //     client.proxy("socks5://test:test@127.0.0.1:5757").unwrap();
-    //     client.connect().unwrap();
-    //     println!("{:?}", client);
-    //     // assert!(res.is_err());
-    // }
+    #[test]
+    fn client_socks_proxy_auth_err() {
+        let client = Client::new("http://api.ipify.org").proxy("socks5://test:test@127.0.0.1:5757").build();
+        assert!(client.is_err());
+    }
 }

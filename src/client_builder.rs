@@ -42,17 +42,20 @@ impl ClientBuilder {
 
     pub fn build(self) -> Result<Client> {
         let uri = self.uri.ok_or(Error::EmptyUri)?;
+        let mut headers = self.headers;
         let transport = if let Some(proxy) = &self.proxy {
-            Transport::proxy(&uri, &proxy)?
+            if let Some(auth) = proxy.base64_auth() {
+                headers.insert("Proxy-Authorization", format!("Basic {}", auth).as_str());
+            };
+            Transport::proxy(&proxy, &uri)?
         } else {
             Transport::stream(&uri)?
         };
         let mut request = Request::new(&uri, self.proxy.is_some());
         request.method(self.method);
-        request.headers(self.headers);
+        request.headers(headers);
         request.version(self.version);
         request.body(self.body);
-
         Ok(Client::from(request, uri, transport, None))
     }
 
