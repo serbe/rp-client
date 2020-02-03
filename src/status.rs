@@ -51,7 +51,7 @@ impl FromStr for Status {
             .next()
             .unwrap_or_else(|| code.reason().unwrap_or("Unknown"));
 
-        Ok(Status::from((version, code, reason)))
+        Ok(Status::from((version, u16::from(code), reason)))
     }
 }
 

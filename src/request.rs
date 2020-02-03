@@ -76,7 +76,10 @@ impl Request {
     }
 
     pub fn set_basic_auth(&mut self, username: &str, password: &str) -> &mut Self {
-	    self.header("Authorization", &format!("Basic {}", encode(&format!("{}:{}", username, password))));
+        self.header(
+            "Authorization",
+            &format!("Basic {}", encode(&format!("{}:{}", username, password))),
+        );
         self
     }
 

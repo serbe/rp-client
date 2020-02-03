@@ -130,7 +130,10 @@ mod tests {
 
     #[test]
     fn client_http_proxy_auth_err() {
-        let mut client = Client::new("http://api.ipify.org").proxy("http://test:test@127.0.0.1:5656").build().unwrap();
+        let mut client = Client::new("http://api.ipify.org")
+            .proxy("http://test:test@127.0.0.1:5656")
+            .build()
+            .unwrap();
         let response = client.send().unwrap();
         assert!(!response.status_code().is_success());
     }
@@ -161,7 +164,9 @@ mod tests {
 
     #[test]
     fn client_socks_proxy_auth_err() {
-        let client = Client::new("http://api.ipify.org").proxy("socks5://test:test@127.0.0.1:5757").build();
+        let client = Client::new("http://api.ipify.org")
+            .proxy("socks5://test:test@127.0.0.1:5757")
+            .build();
         assert!(client.is_err());
     }
 }
