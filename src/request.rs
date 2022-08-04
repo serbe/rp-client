@@ -20,9 +20,9 @@ pub struct Request {
 impl Request {
     pub fn new(uri: &Uri, using_proxy: bool) -> Request {
         let request_uri = if using_proxy {
-            uri.request_uri().to_string()
-        } else {
             uri.proxy_request_uri()
+        } else {
+            uri.request_uri().to_string()
         };
         Request {
             method: Method::GET,
